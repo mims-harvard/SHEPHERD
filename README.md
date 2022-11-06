@@ -169,7 +169,7 @@ python shepherd/predict.py \
 ## Additional Resources
 
 - [Paper]()
-- [Project Website](https://zitniklab.hms.harvard.edu/projects/Shepherd/)
+- [Project Website](https://zitniklab.hms.harvard.edu/projects/SHEPHERD/)
 
 ```
 @article{shepherd,
