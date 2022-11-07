@@ -86,7 +86,7 @@ python pretrain.py \
         --save_dir checkpoints/
 ```
 
-To see and/or modify the default hyperparameters, please see the `get_pretrain_hparams()` function in `hparams.py`.
+To see and/or modify the default hyperparameters, please see the `get_pretrain_hparams()` function in `shepherd/hparams.py`.
 
 ### Train SHEPHERD
 
@@ -126,7 +126,7 @@ python train.py \
         --saved_node_embeddings_path checkpoints/<BEST_PRETRAIN_CHECKPOINT>.ckpt
 ```
 
-To see and/or modify the default hyperparameters, please see the `get_train_hparams()` function in `hparams.py`.
+To see and/or modify the default hyperparameters, please see the `get_train_hparams()` function in `shepherd/hparams.py`.
 
 ### Report SHEPHERD Performance Metrics on Test Patient Dataset
 
@@ -184,7 +184,7 @@ python predict.py \
         --best_ckpt PATH/TO/BEST_MODEL_CHECKPOINT.ckpt 
 ```
 
-To see and/or modify the default hyperparameters, please see the `get_predict_hparams()` function in `hparams.py`.
+To see and/or modify the default hyperparameters, please see the `get_predict_hparams()` function in `shepherd/hparams.py`.
 
 ## Additional Resources
 
