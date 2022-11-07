@@ -151,7 +151,7 @@ where
 cd shepherd
 python predict.py \
         --run_type causal_gene_discovery \
-        --predict_data PATH/TO/PATIENT/DATA.txt \
+        --patient_data disease_simulated \
         --edgelist KG_edgelist_mask.txt \
         --node_map KG_node_map.txt \
         --saved_node_embeddings_path checkpoints/<BEST_PRETRAIN_CHECKPOINT>.ckpt \
@@ -164,7 +164,7 @@ python predict.py \
 cd shepherd
 python predict.py \
         --run_type patients_like_me \
-        --predict_data PATH/TO/PATIENT/DATA.txt \
+        --patient_data disease_simulated \
         --edgelist KG_edgelist_mask.txt \
         --node_map KG_node_map.txt \
         --saved_node_embeddings_path checkpoints/<BEST_PRETRAIN_CHECKPOINT>.ckpt \
@@ -177,7 +177,7 @@ python predict.py \
 cd shepherd
 python predict.py \
         --run_type disease_characterization \
-        --predict_data PATH/TO/PATIENT/DATA.txt \
+        --patient_data disease_simulated \
         --edgelist KG_edgelist_mask.txt \
         --node_map KG_node_map.txt \
         --saved_node_embeddings_path checkpoints/<BEST_PRETRAIN_CHECKPOINT>.ckpt \
