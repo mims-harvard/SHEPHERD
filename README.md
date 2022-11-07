@@ -48,19 +48,12 @@ This codebase leverages Python, Pytorch, Pytorch Geometric, etc. To create an en
 ```
 conda env create -f environment.yml
 conda activate shepherd
+bash install_pyg.sh
 ```
 
-### :three: Install the Repo
+### :three: Download Datasets
 
-After the conda environment is created and activated, install the GitHub repo:
-
-```
-pip install -e .
-```
-
-### :four: Download Datasets
-
-The data is hosted on [Harvard Dataverse](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/TZTPFL). To maintain the directory structure while downloading the files, make sure to select all files and download in the original format.
+The data is hosted on [Harvard Dataverse](https://doi.org/10.7910/DVN/TZTPFL). To maintain the directory structure while downloading the files, make sure to select all files and download in the original format.
 
 We provide the following datasets for training SHEPHERD:
 - Rare disease knowledge graph
@@ -72,104 +65,131 @@ More details about the simulated rare disease patients can be found [here](https
 The rare disease knowledge graph and patient datasets are provided in the appropriate format for SHEPHERD. If you would like to add your own set of patients, please adhere to the format used in the MyGene2 and simulated rare disease patients' files.
 
 
-### :five: Set Configuration File
+### :four: Set Configuration File
 
 Go to `project_config.py` and set the project directory (`PROJECT_DIR`) to be the path to the data folder downloaded in the previous step.
 
 
-### :six: (Optional) Download Model Checkpoints
-We also provide checkpoints for SHEPHERD after pretraining and after training on the rare disease diagnosis tasks. The checkpoints for SHEPHERD can be found [here](). You'll need to move them to the directory specified by `project_config.PROJECT_DIR / 'pretrained_model'` (see above step). You can use these checkpoints directly with the `predict.py` scripts below instead of training the models yourself.
+### :five: (Optional) Download Model Checkpoints
+We also provide checkpoints for SHEPHERD after pretraining and after training on the rare disease diagnosis tasks. The checkpoints for SHEPHERD can be found [here](https://figshare.com/articles/software/SHEPHERD/21444873). You'll need to move them to the directory specified by `project_config.PROJECT_DIR / 'checkpoints'` (see above step). You can use these checkpoints directly with the `predict.py` scripts below instead of training the models yourself.
+
 
 ## Usage
 
 ### Pretrain on Rare Disease KG
 
 ```
-python shepherd/pretrain.py \
-        --edgelist knowledge_graph/KG_edgelist_mask.txt \
-        --node_map knowledge_graph/KG_node_map.txt \
-        --save_dir pretrained_model/
+cd shepherd
+python pretrain.py \
+        --edgelist KG_edgelist_mask.txt \
+        --node_map KG_node_map.txt \
+        --save_dir checkpoints/
 ```
+
+To see and/or modify the default hyperparameters, please see the `get_pretrain_hparams()` function in `hparams.py`.
 
 ### Train SHEPHERD
 
 :sparkles: To run causal gene discovery:
 
 ```
-python shepherd/train.py \
-        --edgelist knowledge_graph/KG_edgelist_mask.txt \
-        --node_map knowledge_graph/KG_node_map.txt \
+cd shepherd
+python train.py \
+        --edgelist KG_edgelist_mask.txt \
+        --node_map KG_node_map.txt \
         --patient_data disease_simulated \
         --run_type causal_gene_discovery \
-        --saved_node_embeddings_path pretrained_model/checkpoints/<BEST_PRETRAIN_CHECKPOINT>.ckpt
+        --saved_node_embeddings_path checkpoints/<BEST_PRETRAIN_CHECKPOINT>.ckpt
 ```
 
 :sparkles: To run patients-like-me identification:
 
 ```
-python shepherd/train.py \
-        --edgelist knowledge_graph/KG_edgelist_mask.txt \
-        --node_map knowledge_graph/KG_node_map.txt \
+cd shepherd
+python train.py \
+        --edgelist KG_edgelist_mask.txt \
+        --node_map KG_node_map.txt \
         --patient_data disease_simulated \
         --run_type patients_like_me \
-        --saved_node_embeddings_path pretrained_model/checkpoints/<BEST_PRETRAIN_CHECKPOINT>.ckpt
+        --saved_node_embeddings_path checkpoints/<BEST_PRETRAIN_CHECKPOINT>.ckpt
 ```
 
 :sparkles: To run novel disease characterization:
 
 ```
-python shepherd/train.py \
-        --edgelist knowledge_graph/KG_edgelist_mask.txt \
-        --node_map knowledge_graph/KG_node_map.txt \
+shepherd
+python train.py \
+        --edgelist KG_edgelist_mask.txt \
+        --node_map KG_node_map.txt \
         --patient_data disease_simulated \
         --run_type disease_characterization \
-        --saved_node_embeddings_path pretrained_model/checkpoints/<BEST_PRETRAIN_CHECKPOINT>.ckpt
+        --saved_node_embeddings_path checkpoints/<BEST_PRETRAIN_CHECKPOINT>.ckpt
 ```
+
+To see and/or modify the default hyperparameters, please see the `get_train_hparams()` function in `hparams.py`.
+
+### Report SHEPHERD Performance Metrics on Test Patient Dataset
+
+After training SHEPHERD, you can calculate SHEPHERD's performance on a test patient dataset. Simply run the same command used to train the model with the additional flags: `--do_inference` and `--best_ckpt <PATH/TO/BEST_MODEL_CHECKPOINT.ckpt>`.
 
 ### Generate Predictions for Patients
 
-After training SHEPHERD, you can generate predictions for patients.
+After training SHEPHERD, you can generate predictions for patients (without performance metrics).
+
+The results of the `predict.py` script are found in 
+```
+project_config.PROJECT_RESULTS/<TASK>/<RUN_NAME>/<DATASET_NAME>
+```
+where
+- `<TASK>` is `causal_gene_discovery`, `patients_like_me`, or `disease_characterization`
+- `<RUN_NAME>` is the name of the run created during training
+- `<DATASET_NAME>` is the name of your patient cohort
 
 :sparkles: To run causal gene discovery:
 
 ```
-python shepherd/predict.py \
+cd shepherd
+python predict.py \
         --run_type causal_gene_discovery \
         --predict_data PATH/TO/PATIENT/DATA.txt \
-        --edgelist knowledge_graph/KG_edgelist_mask.txt \
-        --node_map knowledge_graph/KG_node_map.txt \
-        --saved_node_embeddings_path pretrained_model/checkpoints/<BEST_PRETRAIN_CHECKPOINT>.ckpt \
+        --edgelist KG_edgelist_mask.txt \
+        --node_map KG_node_map.txt \
+        --saved_node_embeddings_path checkpoints/<BEST_PRETRAIN_CHECKPOINT>.ckpt \
         --best_ckpt PATH/TO/BEST_MODEL_CHECKPOINT.ckpt 
 ```
 
 :sparkles: To run patients-like-me identification:
 
 ```
-python shepherd/predict.py \
+cd shepherd
+python predict.py \
         --run_type patients_like_me \
         --predict_data PATH/TO/PATIENT/DATA.txt \
-        --edgelist knowledge_graph/KG_edgelist_mask.txt \
-        --node_map knowledge_graph/KG_node_map.txt \
-        --saved_node_embeddings_path pretrained_model/checkpoints/<BEST_PRETRAIN_CHECKPOINT>.ckpt \
+        --edgelist KG_edgelist_mask.txt \
+        --node_map KG_node_map.txt \
+        --saved_node_embeddings_path checkpoints/<BEST_PRETRAIN_CHECKPOINT>.ckpt \
         --best_ckpt PATH/TO/BEST_MODEL_CHECKPOINT.ckpt 
 ```
 
 :sparkles: To run novel disease characterization:
 
 ```
-python shepherd/predict.py \
+cd shepherd
+python predict.py \
         --run_type disease_characterization \
         --predict_data PATH/TO/PATIENT/DATA.txt \
-        --edgelist knowledge_graph/KG_edgelist_mask.txt \
-        --node_map knowledge_graph/KG_node_map.txt \
-        --saved_node_embeddings_path pretrained_model/checkpoints/<BEST_PRETRAIN_CHECKPOINT>.ckpt \
+        --edgelist KG_edgelist_mask.txt \
+        --node_map KG_node_map.txt \
+        --saved_node_embeddings_path checkpoints/<BEST_PRETRAIN_CHECKPOINT>.ckpt \
         --best_ckpt PATH/TO/BEST_MODEL_CHECKPOINT.ckpt 
 ```
+
+To see and/or modify the default hyperparameters, please see the `get_predict_hparams()` function in `hparams.py`.
 
 ## Additional Resources
 
 - [Paper]()
-- [Project Website](https://zitniklab.hms.harvard.edu/projects/SHEPHERD/)
+- [Project Website](https://zitniklab.hms.harvard.edu/projects/Shepherd/)
 
 ```
 @article{shepherd,
