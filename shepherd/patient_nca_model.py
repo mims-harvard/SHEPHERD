@@ -358,7 +358,7 @@ class CombinedPatientNCA(pl.LightningModule):
         node_embeddings, gat_attn, phenotype_embedding, disease_embeddings, phenotype_mask, disease_mask, attn_weights = self.inference(batch, batch_idx)
 
         # calculate patient embedding loss
-        use_candidate_list = True 
+        use_candidate_list =  self.hparams.hparams['only_hard_distractors'] 
         if self.hparams.hparams['loss'] == 'patient_disease_NCA': labels = batch.disease_one_hot_labels
         else: labels = batch.patient_labels
         loss, softmax, labels, candidate_disease_idx, candidate_disease_embeddings = self.patient_model.calc_loss(batch, phenotype_embedding, disease_embeddings, disease_mask, labels, use_candidate_list)
