@@ -158,12 +158,6 @@ class NodeEmbeder(pl.LightningModule):
             et_ids, et_counts = all_edge_types.unique(return_counts=True)
             targets_dict = self.create_target_dict(all_edge_types, et_ids) # indices into all_edge_types for each edge type
             rand_index = torch.tensor(np.vectorize(sample_node_for_et)(all_edge_types.cpu(), targets_dict)).to(device)
-        
-        elif self.hparams.hp_dict['negative_sampler_approach'] == 'by_edge_type_supp':
-            # combination of 'all' and 'by_edge_type'
-            et_ids, et_counts = all_edge_types.unique(return_counts=True)
-            targets_dict = self.create_target_dict(all_edge_types, et_ids, supp=True) # indices into all_edge_types for each edge type
-            rand_index = torch.tensor(np.vectorize(sample_node_for_et)(all_edge_types.cpu(), targets_dict)).to(device)
 
         if 'index_to_node_features_pos' in data:
             index_to_node_features_neg = data.index_to_node_features_pos[rand_index] #NOTE: currently possible to get the same node as positive & negative target
@@ -173,17 +167,10 @@ class NodeEmbeder(pl.LightningModule):
         
         return curr_neg_target_embeds
 
-    def create_target_dict(self, all_edge_types, et_ids, supp=False):
+    def create_target_dict(self, all_edge_types, et_ids):
         targets_dict = {}
         for k in et_ids:
             indices = (all_edge_types == int(k)).nonzero().cpu()
-
-            if supp:
-                shape = 50 # arbitrarily chosen number
-                new_indices = np.random.choice(all_edge_types.size(0), shape).reshape((shape, 1))
-                indices = np.unique(np.concatenate((indices, new_indices)))
-                indices = indices.reshape((indices.shape[0], 1))
-
             targets_dict[int(k)] = indices
         return targets_dict
 
@@ -252,15 +239,6 @@ class NodeEmbeder(pl.LightningModule):
         loss = self.calc_loss(pred, link_labels)
         t3 = time.time()
 
-        # Log predicted scores
-        self.logger.experiment.log({f'{dataset_type}/node_predicted_scores': wandb.Histogram(pred.cpu().detach().numpy())})
-        self._logger({f'{dataset_type}/node_min_pred_positive': min(pred[link_labels == 1]),
-                      f'{dataset_type}/node_max_pred_positive': max(pred[link_labels == 1]),
-                      f'{dataset_type}/node_min_pred_negative': min(pred[link_labels != 1]),
-                      f'{dataset_type}/node_max_pred_negative': max(pred[link_labels != 1]),
-                      f'{dataset_type}/node_avg_pred_positive': torch.mean(pred[link_labels == 1]),
-                      f'{dataset_type}/node_avg_pred_negative': torch.mean(pred[link_labels != 1])})
-        
         # Calculate metrics
         if self.loss_type == "max-margin":
             metric_pred = torch.sigmoid(raw_pred)
@@ -354,7 +332,7 @@ class NodeEmbeder(pl.LightningModule):
                 "test/node_roc": roc_score, 
                 "test/node_ap": ap_score, 
                 "test/node_acc": acc, 
-                "test/node_f1": f1#,
+                "test/node_f1": f1
                }
 
         rel_logs = metrics_per_rel(pred, link_labels, self.edge_attr_dict, data.all_edge_types, "test", self.pred_threshold)

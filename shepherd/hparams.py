@@ -54,13 +54,13 @@ def get_pretrain_hparams(args, combined=False):
 
 ####################################################################
 #
-# COMBINED MODEL HYPERPARAMETERS
+# TRAIN MODEL HYPERPARAMETERS
 #
 ####################################################################
 
 
 def get_train_hparams(args):
-    print('combined model args: ', args)
+    print('Train model args: ', args)
 
     # Default
     hparams = {
