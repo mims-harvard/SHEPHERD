@@ -31,7 +31,7 @@ def get_pretrain_hparams(args, combined=False):
                'num_workers': 4,
                'batch_size': 512,
                'inference_batch_size': 64,
-               'neighbor_sampler_sizes': [15, 10, 5], #[-1, 15, 10]
+               'neighbor_sampler_sizes': [15, 10, 5],
                'max_epochs': 200,
                'gradclip': 1.0,
                'lr_factor': 0.01,
@@ -73,7 +73,7 @@ def get_train_hparams(args):
                'upsample_cand': args.upsample_cand, 
                'neighbor_sampler_sizes': [args.neighbor_sampler_size, 10, 5],
                'lambda': args.lmbda, # Contribution of two loss functions
-               'alpha': args.alpha, # Contribution of GP gate
+               'alpha': args.alpha, # Contribution of GP gate. NOTE: This is not used for patients-like-me or novel disease characterization
                'kappa': (1 - args.lmbda) * args.kappa,
                'seed': args.seed,
                'batch_size': args.batch_size,
@@ -160,7 +160,8 @@ def get_run_type_args(args, hparams):
                         'add_similar_patients': False,
                         'wandb_project_name': 'disease-heterogeneity',
                         'plot_disease_embed': True,
-                        'plot_patient_embed': False
+                        'plot_patient_embed': False,
+                        'alpha': 0 # NOTE: This value is not used in the novel disease characterization model
                        })
     elif args.run_type == 'patients_like_me':
         hparams.update({
@@ -172,7 +173,8 @@ def get_run_type_args(args, hparams):
                         'add_similar_patients': True,
                         'wandb_project_name': 'patients-like-me',
                         'plot_disease_embed': False,
-                        'plot_patient_embed': True
+                        'plot_patient_embed': True,
+                        'alpha': 0 # NOTE: This value is not used in the patients-like-me model
                        })
     else:
         raise Exception('You must specify run type.')
