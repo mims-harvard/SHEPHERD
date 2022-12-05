@@ -35,11 +35,14 @@ from samplers import NeighborSampler
 
 
 def parse_args():
-    # Parse arguments
     parser = argparse.ArgumentParser(description="Learn node embeddings.")
+    
+    # Input files/parameters
     parser.add_argument("--edgelist", type=str, default=None, help="File with edge list")
     parser.add_argument("--node_map", type=str, default=None, help="File with node list")
     parser.add_argument('--save_dir', type=str, default=None, help='Directory for saving files')
+    
+    # Tunable parameters
     parser.add_argument('--nfeat', type=int, default=2048, help='Dimension of embedding layer')
     parser.add_argument('--hidden', default=256, type=int)
     parser.add_argument('--output', default=128, type=int)
@@ -47,11 +50,15 @@ def parse_args():
     parser.add_argument('--wd', default=0.0, type=float)
     parser.add_argument('--dropout', type=float, default=0.3, help='Dropout')
     parser.add_argument('--lr', default=0.0001, type=float)
+    parser.add_argument('--max_epochs', default=1000, type=int)
+    
+    # Resume with best checkpoint
     parser.add_argument('--resume', default="", type=str)
     parser.add_argument('--best_ckpt', type=str, default=None, help='Name of the best performing checkpoint')
-    parser.add_argument('--max_epochs', default=1000, type=int)
-    parser.add_argument('--backwards_compatible_loading', action='store_true')
+    
+    # Output
     parser.add_argument('--save_embeddings', action='store_true')
+
     args = parser.parse_args()
     return args
 
@@ -78,15 +85,9 @@ def train(args, hparams):
             resume_id = "_".join(args.resume.split(":"))
         run_name = args.resume
         wandb_logger = WandbLogger(run_name, project='kg-train', entity='rare_disease_dx', save_dir=hparams['wandb_save_dir'], id=resume_id, resume=resume_id)
-        if args.backwards_compatible_loading:
-            #NOTE: make sure that the hparams in hp_dict line up with the hparams for the model loaded from checkpoint
-            model = NodeEmbeder.load_from_checkpoint(checkpoint_path=str(Path(args.save_dir) / 'checkpoints' /  args.best_ckpt), 
-                                                     all_data=all_data, edge_attr_dict=edge_attr_dict, hp_dict=hparams,
-                                                     num_nodes=len(nodes["node_idx"].unique()), combined_training=False) 
-        else:
-            model = NodeEmbeder.load_from_checkpoint(checkpoint_path=str(Path(args.save_dir) / 'checkpoints' /  args.best_ckpt), 
-                                                     all_data=all_data, edge_attr_dict=edge_attr_dict, 
-                                                     num_nodes=len(nodes["node_idx"].unique()), combined_training=False) 
+        model = NodeEmbeder.load_from_checkpoint(checkpoint_path=str(Path(args.save_dir) / 'checkpoints' /  args.best_ckpt), 
+                                                 all_data=all_data, edge_attr_dict=edge_attr_dict, 
+                                                 num_nodes=len(nodes["node_idx"].unique()), combined_training=False) 
     else:
         curr_time = datetime.now().strftime("%H:%M:%S")
         run_name = f"{curr_time}_run"
