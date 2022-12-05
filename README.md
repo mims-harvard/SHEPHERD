@@ -71,7 +71,7 @@ Go to `project_config.py` and set the project directory (`PROJECT_DIR`) to be th
 
 
 ### :five: (Optional) Download Model Checkpoints
-We also provide checkpoints for SHEPHERD after pretraining and after training on the rare disease diagnosis tasks. The checkpoints for SHEPHERD can be found [here](https://figshare.com/articles/software/SHEPHERD/21444873). You'll need to move them to the directory specified by `project_config.PROJECT_DIR / 'checkpoints'` (see above step). You can use these checkpoints directly with the `predict.py` scripts below instead of training the models yourself.
+We also provide checkpoints for SHEPHERD after pretraining and after training on the rare disease diagnosis tasks. The checkpoints for SHEPHERD can be found [here](https://figshare.com/articles/software/SHEPHERD/21444873). You'll need to move them to the directory specified by `project_config.PROJECT_DIR / 'checkpoints'` (see above step). Make sure all downloaded files are unzipped. You can use these checkpoints directly with the `predict.py` scripts below instead of training the models yourself.
 
 
 ## Usage
