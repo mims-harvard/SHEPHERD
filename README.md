@@ -117,7 +117,7 @@ python train.py \
 :sparkles: To run novel disease characterization:
 
 ```
-shepherd
+cd shepherd
 python train.py \
         --edgelist KG_edgelist_mask.txt \
         --node_map KG_node_map.txt \
