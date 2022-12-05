@@ -42,7 +42,7 @@ def get_pretrain_hparams(args, combined=False):
                'min_lr': 0,
                'eps': 1e-8,
                'seed': 1,
-               'profiler': None, #'simple', #'advanced',
+               'profiler': None,
                'wandb_save_dir': project_config.PROJECT_DIR / 'wandb' / 'preprocess',
                'log_every_n_steps': 10,
                'time': False,
@@ -79,7 +79,6 @@ def get_train_hparams(args):
                'batch_size': args.batch_size,
                
                # Fixed parameters
-               'train_from_scratch': False,
                'pos_weight': 1,
                'neg_weight': 20,
                'margin': 0.4,
@@ -89,7 +88,6 @@ def get_train_hparams(args):
                'leaky_relu': 0.1,
                'decoder_type': 'bilinear',
                'combined_training': True,
-               'freeze_node_embeds': False,
                'sample_from_gpd': True,
                'attention_type': 'bilinear',
                'n_cand_diseases': 1000,
@@ -97,7 +95,7 @@ def get_train_hparams(args):
                'patient_similarity_type': 'gene', # How we determine labels for similar patients in "Patients Like Me"
                'n_similar_patients': 2, # Number of patients with the same gene/disease that we add to the batch
                'only_hard_distractors': False, # Flag when true only uses the curated hard distractors at train time
-               'sample_edges_from_train_patients': False, # preferentially sample edges connected to training patients
+               'sample_edges_from_train_patients': False, # Preferentially sample edges connected to training patients
                'gradclip': 1.0,
                'inference_batch_size': 64,
                'max_epochs': 100, 
@@ -124,8 +122,6 @@ def get_train_hparams(args):
                'plot_phen_gene_sims': False, # Flag to plot phenotype-gene similarities
                'mrr_vs_percent_overlap': False, # Flag to plot MRR vs. percent overlap of phenotypes
                'saved_checkpoint_path': project_config.PROJECT_DIR  / f'{args.saved_node_embeddings_path}', 
-               'spl_gate': True,
-               'spl_pca':  None
     }
 
     # Get hyperparameters based on run type arguments
@@ -215,7 +211,6 @@ def get_patient_data_args(args, hparams):
 ####################################################################
 
 
-
 def get_predict_hparams(args):
     hparams = {
                'seed': 33,
@@ -230,15 +225,12 @@ def get_predict_hparams(args):
                'log_gpu_memory': True,
                'debug': False,
                'wandb_save_dir' : project_config.PROJECT_DIR / 'wandb',
-               'spl_pca': None,
-               'spl_gate': True,
                'saved_checkpoint_path': project_config.PROJECT_DIR  / f'{args.saved_node_embeddings_path}',
                'test_n_cand_diseases': -1, 
                'candidate_disease_type': 'all_kg_nodes', #'udn_diseases', 'orphanet' 
                'only_hard_distractors': False, # Flag when true only uses the curated hard distractors at train time
                'patient_similarity_type': 'gene', # How we determine labels for similar patients in "Patients Like Me"
                'n_similar_patients': 2, # Number of patients with the same gene/disease that we add to the batch
-
     }
 
     # Get hyperparameters based on run type arguments

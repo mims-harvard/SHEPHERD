@@ -96,21 +96,15 @@ def predict(args):
 
 
     # Get dataset
-    if hparams['spl_gate']:
-        print('Loading SPL...')
-        spl = np.load(project_config.PROJECT_DIR / 'patients' / hparams['spl'])  
-        if (project_config.PROJECT_DIR / 'patients' / hparams['spl_index']).exists():
-            with open(str(project_config.PROJECT_DIR / 'patients' / hparams['spl_index']), "rb") as input_file:
-                spl_indexing_dict = pickle.load(input_file)
-        else: spl_indexing_dict=None # TODO: short term fix for simulated patients, get rid once we create this dict
-        
-        print('Loaded SPL information')
-    else:
-        print('Setting SPL to none')
-        spl=None
-        spl_indexing_dict = None
+    print('Loading SPL...')
+    spl = np.load(project_config.PROJECT_DIR / 'patients' / hparams['spl'])  
+    if (project_config.PROJECT_DIR / 'patients' / hparams['spl_index']).exists():
+        with open(str(project_config.PROJECT_DIR / 'patients' / hparams['spl_index']), "rb") as input_file:
+            spl_indexing_dict = pickle.load(input_file)
+    else: spl_indexing_dict = None # TODO: short term fix for simulated patients, get rid once we create this dict
+    print('Loaded SPL information')
     
-    is_udn = 'udn' in hparams['test_data'] or 'cada' in hparams['test_data']
+    is_udn = 'udn' in hparams['test_data']
     dataset = PatientDataset(project_config.PROJECT_DIR / 'patients' / hparams['test_data'], time=hparams['time'], is_udn=is_udn)
 
     # Get dataloader
@@ -133,12 +127,8 @@ def predict(args):
     # Get patient model 
     model = get_model(args, hparams, None, all_data, edge_attr_dict,  n_nodes,load_from_checkpoint=True)
 
-    trainer = pl.Trainer(gpus=hparams['n_gpus'], 
-                        #logger=wandb_logger, 
-                        #precision=hparams['precision']
-                        )
+    trainer = pl.Trainer(gpus=hparams['n_gpus'])
     results = trainer.predict(model, dataloaders=dataloader)
-
 
     print('results length: ', len(results))
     ranks_dfs, scores_dfs, attn_dfs, gat_attn_df_1, gat_attn_df_2, gat_attn_df_3 = zip(*results)
