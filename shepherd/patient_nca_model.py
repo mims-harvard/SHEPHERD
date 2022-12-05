@@ -33,20 +33,19 @@ class CombinedPatientNCA(pl.LightningModule):
         super().__init__()
         self.save_hyperparameters('hparams') 
 
+        print('Saved combined model hyperparameters: ', self.hparams)
+
         self.all_data = all_data
 
         self.all_train_nodes = []
         self.train_patient_nodes = []
 
-        if self.hparams.hparams['train_from_scratch']:
-            self.node_model = NodeEmbeder(all_data, edge_attr_dict, hp_dict=node_hparams, num_nodes=n_nodes, combined_training=self.hparams.hparams['combined_training'])
-        else:
-            print(f"Loading Node Embedder from {self.hparams.hparams['saved_checkpoint_path']}")
-            
-            # NOTE: loads in saved hyperparameters
-            self.node_model = NodeEmbeder.load_from_checkpoint(checkpoint_path=self.hparams.hparams['saved_checkpoint_path'], 
-                all_data=all_data, edge_attr_dict=edge_attr_dict, 
-                num_nodes=n_nodes, combined_training=self.hparams.hparams['combined_training'], spl_mat=None) 
+        print(f"Loading Node Embedder from {self.hparams.hparams['saved_checkpoint_path']}")
+        
+        # NOTE: loads in saved hyperparameters
+        self.node_model = NodeEmbeder.load_from_checkpoint(checkpoint_path=self.hparams.hparams['saved_checkpoint_path'], 
+                                                           all_data=all_data, edge_attr_dict=edge_attr_dict, 
+                                                           num_nodes=n_nodes, combined_training=self.hparams.hparams['combined_training'], spl_mat=None) 
     
         # NOTE: this will only work with GATv2Conv
         self.patient_model = PatientNCA(hparams, embed_dim=self.node_model.hparams.hp_dict['output']*self.node_model.hparams.hp_dict['n_heads'])
@@ -153,10 +152,7 @@ class CombinedPatientNCA(pl.LightningModule):
                 'train/correct_ranks': correct_ranks,
                 'train/disease_names':  batch.disease_names,
                 'train/corr_gene_names': batch.corr_gene_names,
-                "train/softmax": softmax.detach().cpu(),
-         
-
-                #**additional_labels
+                "train/softmax": softmax.detach().cpu(),         
                 }
 
         if self.hparams.hparams['loss'] == 'patient_disease_NCA':
@@ -178,30 +174,28 @@ class CombinedPatientNCA(pl.LightningModule):
         self.log('val_loss/patient_loss', patient_loss, prog_bar=True)
         self.log('val_loss/node_embedder_loss', node_embedder_loss, prog_bar=True)
 
-        batch_results = {'loss/val_loss': loss, 
-                "val/node.roc": roc_score, 
-                "val/node.ap": ap_score, "val/node.acc": acc, 
-                "val/node.f1": f1, 
-                'val/node.embed': node_embeddings.detach().cpu(), 
-                'val/patient.phenotype_embed': phenotype_embedding.detach().cpu(), 
-                'val/attention_weights': attn_weights.detach().cpu(),
-                'val/phenotype_names_degrees': batch.phenotype_names,
-                'val/correct_ranks': correct_ranks, 
-                'val/disease_names':  batch.disease_names,
-                'val/corr_gene_names': batch.corr_gene_names,
-                "val/softmax": softmax.detach().cpu(),
-                }
+        batch_results = {"loss/val_loss": loss, 
+                         "val/node.roc": roc_score, 
+                         "val/node.ap": ap_score, "val/node.acc": acc, 
+                         "val/node.f1": f1, 
+                         'val/node.embed': node_embeddings.detach().cpu(), 
+                         'val/patient.phenotype_embed': phenotype_embedding.detach().cpu(), 
+                         'val/attention_weights': attn_weights.detach().cpu(),
+                         'val/phenotype_names_degrees': batch.phenotype_names,
+                         'val/correct_ranks': correct_ranks, 
+                         'val/disease_names':  batch.disease_names,
+                         'val/corr_gene_names': batch.corr_gene_names,
+                         "val/softmax": softmax.detach().cpu(),
+                        }
 
         if self.hparams.hparams['loss'] == 'patient_disease_NCA':
             batch_sz, n_diseases, embed_dim = disease_embeddings.shape
             batch_disease_nid_reshaped = batch.batch_disease_nid.view(-1)
-            batch_results.update({
-                'val/batch_disease_nid': batch_disease_nid_reshaped.detach().cpu(),
-                'val/cand_disease_names': batch.cand_disease_names,
-                'val/batch_cand_disease_nid': cand_disease_idx.detach().cpu(),
-                'val/patient.disease_embed': cand_disease_embeddings.detach().cpu()
-
-            })
+            batch_results.update({'val/batch_disease_nid': batch_disease_nid_reshaped.detach().cpu(),
+                                  'val/cand_disease_names': batch.cand_disease_names,
+                                  'val/batch_cand_disease_nid': cand_disease_idx.detach().cpu(),
+                                  'val/patient.disease_embed': cand_disease_embeddings.detach().cpu()
+                                })
         return batch_results 
 
     def write_results_to_file(self, batch, softmax, correct_ranks, labels, phenotype_mask, disease_mask, attn_weights,  gat_attn, node_embeddings, phenotype_embeddings,disease_embeddings, save=True, loop_type='predict'):
@@ -297,20 +291,20 @@ class CombinedPatientNCA(pl.LightningModule):
     def test_step(self, batch, batch_idx):
         correct_ranks, softmax, labels, node_embedder_loss, patient_loss, roc_score, ap_score, acc, f1, gat_attn, node_embeddings, phenotype_embedding, disease_embeddings, phenotype_mask, disease_mask, attn_weights, cand_disease_idx, cand_disease_embeddings = self._step(batch, 'test')
         batch_results = {'test/correct_ranks': correct_ranks, 
-                'test/node.embed': node_embeddings.detach().cpu(), 
-                'test/patient.phenotype_embed': phenotype_embedding.detach().cpu(), 
-                'test/attention_weights': attn_weights.detach().cpu(),
-                'test/phenotype_names_degrees': batch.phenotype_names,
-                'test/disease_names': batch.disease_names,
-                'test/corr_gene_names': batch.corr_gene_names,
-                'test/gat_attn': gat_attn, # type = list
-                "test/n_id": batch.n_id[:batch.batch_size].detach().cpu(),
-                "test/patient_ids": batch.patient_ids, # type = list
-                "test/softmax": softmax.detach().cpu(),
-                "test/labels": labels.detach().cpu(),
-                'test/phenotype_mask': phenotype_mask.detach().cpu(),
-                'test/disease_mask': phenotype_mask.detach().cpu(),
-                }
+                         'test/node.embed': node_embeddings.detach().cpu(), 
+                         'test/patient.phenotype_embed': phenotype_embedding.detach().cpu(), 
+                         'test/attention_weights': attn_weights.detach().cpu(),
+                         'test/phenotype_names_degrees': batch.phenotype_names,
+                         'test/disease_names': batch.disease_names,
+                         'test/corr_gene_names': batch.corr_gene_names,
+                         'test/gat_attn': gat_attn, # type = list
+                         "test/n_id": batch.n_id[:batch.batch_size].detach().cpu(),
+                         "test/patient_ids": batch.patient_ids, # type = list
+                         "test/softmax": softmax.detach().cpu(),
+                         "test/labels": labels.detach().cpu(),
+                         'test/phenotype_mask': phenotype_mask.detach().cpu(),
+                         'test/disease_mask': phenotype_mask.detach().cpu(),
+                        }
 
         if self.hparams.hparams['loss'] == 'patient_disease_NCA':
             batch_sz, n_diseases, embed_dim = disease_embeddings.shape
