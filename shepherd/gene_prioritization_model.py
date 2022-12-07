@@ -47,19 +47,14 @@ class CombinedGPAligner(pl.LightningModule):
         self.train_corr_gene_nid = {}
 
         print(f"Loading Node Embedder from {self.hparams.hparams['saved_checkpoint_path']}")
-        # if self.hparams.hparams['backwards_compatible_loading']:
-        #     #NOTE: Make sure that the hparams in node_hparams are the same as the hparams in the loaded model
-        #     self.node_model = NodeEmbeder.load_from_checkpoint(checkpoint_path=self.hparams.hparams['saved_checkpoint_path'], 
-        #         all_data=all_data, edge_attr_dict=edge_attr_dict, hp_dict=node_hparams,
-        #         num_nodes=n_nodes, combined_training=self.hparams.hparams['combined_training'], spl_mat=spl_pca) 
-        # else:
+
         # NOTE: loads in saved hyperparameters
         self.node_model = NodeEmbeder.load_from_checkpoint(checkpoint_path=self.hparams.hparams['saved_checkpoint_path'], 
-            all_data=all_data, edge_attr_dict=edge_attr_dict, 
-            num_nodes=n_nodes, combined_training=self.hparams.hparams['combined_training']) 
+                                                           all_data=all_data, edge_attr_dict=edge_attr_dict, 
+                                                           num_nodes=n_nodes, combined_training=self.hparams.hparams['combined_training']) 
         
         self.patient_model = self.get_patient_model()
-        print('End Combined Model Initialization')
+        print('End Patient Model Initialization')
         
 
     def get_patient_model(self):
@@ -109,12 +104,12 @@ class CombinedGPAligner(pl.LightningModule):
             batch = get_edges(batch, self.all_data, step_type)
         t1 = time.time()
 
-        ## Forward pass
+        # Forward pass
         node_embeddings, gat_attn, phenotype_embedding, candidate_gene_embeddings, disease_embeddings, gene_mask, phenotype_mask, disease_mask, attn_weights = self.forward(batch, step_type)
         t2 = time.time()
 
-        ## Calculate similarities between patient phenotypes & candidate genes/diseases
-        alpha = self.hparams.hparams['alpha'] if 'alpha' in self.hparams.hparams else 0 #backwards compatible
+        # Calculate similarities between patient phenotypes & candidate genes/diseases
+        alpha = self.hparams.hparams['alpha']
         use_candidate_list = True if step_type != 'train' else False
         cand_gene_to_phenotypes_spl = batch.batch_cand_gene_to_phenotypes_spl if use_candidate_list else batch.batch_concat_cand_gene_to_phenotypes_spl
         disease_nid = batch.batch_disease_nid if self.hparams.hparams['use_diseases'] else None
@@ -344,7 +339,7 @@ class CombinedGPAligner(pl.LightningModule):
         node_embeddings, gat_attn, phenotype_embedding, candidate_gene_embeddings, disease_embeddings, gene_mask, phenotype_mask, disease_mask, attn_weights = self.inference(batch, batch_idx)
         
         # Calculate similarities between patient phenotypes & candidate genes/diseases
-        alpha = self.hparams.hparams['alpha'] if 'alpha' in self.hparams.hparams else 0 #backwards compatible
+        alpha = self.hparams.hparams['alpha']
         use_candidate_list = True
         disease_nid = batch.batch_disease_nid if self.hparams.hparams['use_diseases'] else None
 

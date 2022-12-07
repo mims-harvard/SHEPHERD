@@ -53,35 +53,31 @@ import faulthandler; faulthandler.enable()
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Learning node embeddings.")
+    
+    # Input files/parameters
     parser.add_argument("--edgelist", type=str, default=None, help="File with edge list")
     parser.add_argument("--node_map", type=str, default=None, help="File with node list")
     parser.add_argument('--saved_node_embeddings_path', type=str, default=None, help='Path within kg_embeddings folder to the saved KG embeddings')
-    parser.add_argument('--nfeat', type=int, help='Dimension of embedding layer')
-    parser.add_argument('--lmbda', type=float, default=0.5, help='Lambda')
-    parser.add_argument('--alpha', type=float, default=0, help='Alpha')
-    parser.add_argument('--softmax_scale', type=float, default=1, help='Temperature for Softmax')
-    parser.add_argument('--kappa', type=float, default=0.3, help='Kappa (Only used for combined model with link prediction loss)')
-    parser.add_argument('--train_from_scratch', type=bool, default=False, help='Train from scratch')
-    parser.add_argument('--filter_edges', type=bool, default=False)
-    parser.add_argument('--neighbor_sampler_size', default=-1, type=int)
-    parser.add_argument('--sparse_sample', default=200, type=int)
-    parser.add_argument('--upsample_cand', default=1, type=int)
-    parser.add_argument('--lr', default=0.0001, type=float)
-    parser.add_argument('--pos_weight', default=1, type=int)
-    parser.add_argument('--neg_weight', default=20, type=int) 
-    parser.add_argument('--margin', default=0.4, type=int)
-    parser.add_argument('--thresh', default=1, type=int) 
-    parser.add_argument('--batch_size', default=64, type=int) 
-    parser.add_argument('--seed', default=33, type=int) 
-
     parser.add_argument('--patient_data', default="disease_simulated", type=str)
     parser.add_argument('--run_type', choices=["causal_gene_discovery", "disease_characterization", "patients_like_me"], type=str)
 
+    # Tunable parameters
+    parser.add_argument('--sparse_sample', default=200, type=int)
+    parser.add_argument('--lr', default=0.0001, type=float)
+    parser.add_argument('--upsample_cand', default=1, type=int)
+    parser.add_argument('--neighbor_sampler_size', default=-1, type=int)
+    parser.add_argument('--lmbda', type=float, default=0.5, help='Lambda')
+    parser.add_argument('--alpha', type=float, default=0, help='Alpha')
+    parser.add_argument('--kappa', type=float, default=0.3, help='Kappa (Only used for combined model with link prediction loss)')
+    parser.add_argument('--seed', default=33, type=int)
+    parser.add_argument('--batch_size', default=64, type=int) 
+    
+    # Resume / run inference with best checkpoint
     parser.add_argument('--resume', default="", type=str)
     parser.add_argument('--do_inference', action='store_true')
-    parser.add_argument('--use_wandb', type=bool, default=True)
-
     parser.add_argument('--best_ckpt', type=str, default=None, help='Name of the best performing checkpoint')
+    
+    parser.add_argument('--use_wandb', type=bool, default=True)
 
     args = parser.parse_args()
     return args
@@ -93,14 +89,14 @@ def load_patient_datasets(hparams, inference=False):
     if inference:
         train_dataset=None
     else:
-        train_is_udn = 'udn' in hparams['train_data'] or 'cada' in hparams['train_data'] 
+        train_is_udn = 'udn' in hparams['train_data']
         train_dataset = PatientDataset(project_config.PROJECT_DIR / 'patients' / hparams['train_data'],  time=hparams['time'], is_udn=train_is_udn)
 
-    val_is_udn = 'udn' in hparams['validation_data'] or 'cada' in hparams['validation_data'] 
+    val_is_udn = 'udn' in hparams['validation_data']
     val_dataset = PatientDataset(project_config.PROJECT_DIR / 'patients' / hparams['validation_data'], time=hparams['time'], is_udn=val_is_udn)
 
     if inference:
-        test_is_udn = 'udn' in hparams['test_data'] or 'cada' in hparams['test_data']
+        test_is_udn = 'udn' in hparams['test_data']
         test_dataset = PatientDataset(project_config.PROJECT_DIR / 'patients' / hparams['test_data'], time=hparams['time'], is_udn=test_is_udn)
 
     else: test_dataset = None  
