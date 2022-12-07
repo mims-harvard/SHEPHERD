@@ -69,12 +69,12 @@ python predict.py \
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Learning node embeddings.")
+    parser = argparse.ArgumentParser(description="Predict using SHEPHERD")
     parser.add_argument("--edgelist", type=str, default=None, help="File with edge list")
     parser.add_argument("--node_map", type=str, default=None, help="File with node list")
     parser.add_argument('--patient_data', default="disease_simulated", type=str)
     parser.add_argument('--run_type', choices=["causal_gene_discovery", "disease_characterization", "patients_like_me"], type=str)
-    parser.add_argument('--saved_node_embeddings_path', type=str, default=None, help='Path within kg_embeddings folder to the saved KG embeddings')
+    parser.add_argument('--saved_node_embeddings_path', type=str, default=None, help='Path to pretrained model checkpoint')
     parser.add_argument('--best_ckpt', type=str, default=None, help='Name of the best performing checkpoint')
     args = parser.parse_args()
     return args
@@ -101,12 +101,14 @@ def predict(args):
     if (project_config.PROJECT_DIR / 'patients' / hparams['spl_index']).exists():
         with open(str(project_config.PROJECT_DIR / 'patients' / hparams['spl_index']), "rb") as input_file:
             spl_indexing_dict = pickle.load(input_file)
-    else: spl_indexing_dict = None # TODO: short term fix for simulated patients, get rid once we create this dict
+    else: spl_indexing_dict = None 
     print('Loaded SPL information')
     
     is_udn = 'udn' in hparams['test_data']
     dataset = PatientDataset(project_config.PROJECT_DIR / 'patients' / hparams['test_data'], time=hparams['time'], is_udn=is_udn)
-
+    print(f'There are {len(dataset)} patients in the test dataset')
+    hparams.update({'inference_batch_size': len(dataset)})
+    print('batch size: ', hparams['inference_batch_size'])
     # Get dataloader
     nid_to_spl_dict = {nid: idx for idx, nid in enumerate(nodes[nodes["node_type"] == "gene/protein"]["node_idx"].tolist())}
 
@@ -136,15 +138,15 @@ def predict(args):
     print('---- RESULTS ----')
     output_base = project_config.PROJECT_DIR / 'results'/  (str(args.best_ckpt).replace('/', '.').split('.ckpt')[0]) 
     ranks_df = pd.concat(ranks_dfs).reset_index(drop=True)
-    #ranks_df.to_csv(str(output_base) + '_ranks.csv', index=False)
+    ranks_df.to_csv(str(output_base) + '_ranks.csv', index=False)
     print(ranks_df)
 
     scores_df = pd.concat(scores_dfs).reset_index(drop=True)
-    #scores_df.to_csv(str(output_base) + '_scores.csv', index=False)
+    scores_df.to_csv(str(output_base) + '_scores.csv', index=False)
     print(scores_df)
 
     attn_df = pd.concat(attn_dfs).reset_index(drop=True)
-    #wc -l attn_df.to_csv(str(output_base) + '_phenotype_attn.csv', index=False)
+    attn_df.to_csv(str(output_base) + '_phenotype_attn.csv', index=False)
     print(attn_df)
 
 

@@ -92,6 +92,7 @@ def get_train_hparams(args):
                'attention_type': 'bilinear',
                'n_cand_diseases': 1000,
                'test_n_cand_diseases': -1, 
+               'candidate_disease_type': 'all_kg_nodes',
                'patient_similarity_type': 'gene', # How we determine labels for similar patients in "Patients Like Me"
                'n_similar_patients': 2, # Number of patients with the same gene/disease that we add to the batch
                'only_hard_distractors': False, # Flag when true only uses the curated hard distractors at train time
@@ -149,13 +150,10 @@ def get_run_type_args(args, hparams):
         hparams.update({
                         'model_type': 'patient_NCA',
                         'loss': 'patient_disease_NCA',
-                        'candidate_disease_type': 'all_kg_nodes',
                         'use_diseases': True,
                         'add_cand_diseases': True ,
                         'add_similar_patients': False,
                         'wandb_project_name': 'disease-heterogeneity',
-                        'plot_disease_embed': True,
-                        'plot_patient_embed': False,
                        })
     elif args.run_type == 'patients_like_me':
         hparams.update({
@@ -165,8 +163,6 @@ def get_run_type_args(args, hparams):
                         'add_cand_diseases': False,
                         'add_similar_patients': True,
                         'wandb_project_name': 'patients-like-me',
-                        'plot_disease_embed': False,
-                        'plot_patient_embed': True,
                        })
     else:
         raise Exception('You must specify run type.')
@@ -210,20 +206,20 @@ def get_patient_data_args(args, hparams):
 def get_predict_hparams(args):
     hparams = {
                'seed': 33,
-               'inference_batch_size': 1024, #NOTE: make sure that inference_batch_size > # of patients you want to predict over
+               'inference_batch_size': args.batch_sz, #NOTE: make sure that inference_batch_size > # of patients you want to predict over
                'max_epochs': 100, 
-               'n_gpus': 0, 
+               'n_gpus': 0, # NOTE: currently predict scripts only work with CPU
                'num_workers': 4, 
                'precision': 16, 
                'profiler': 'simple',
                'pin_memory': False,
                'time': False,
-               'log_gpu_memory': True,
+               'log_gpu_memory': False,
                'debug': False,
                'wandb_save_dir' : project_config.PROJECT_DIR / 'wandb',
                'saved_checkpoint_path': project_config.PROJECT_DIR  / f'{args.saved_node_embeddings_path}',
                'test_n_cand_diseases': -1, 
-               'candidate_disease_type': 'all_kg_nodes', #'udn_diseases', 'orphanet' 
+               'candidate_disease_type': 'all_kg_nodes', 
                'only_hard_distractors': False, # Flag when true only uses the curated hard distractors at train time
                'patient_similarity_type': 'gene', # How we determine labels for similar patients in "Patients Like Me"
                'n_similar_patients': 2, # Number of patients with the same gene/disease that we add to the batch
