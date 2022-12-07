@@ -1,4 +1,4 @@
-# Bash script to run SHEPHERD for patients-like-me
+# Bash script to train SHEPHERD for patients-like-me
 
 # Command to run this bash script:
 # bash run_patients_like_me.sh

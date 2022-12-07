@@ -1,4 +1,4 @@
-# Bash script to run SHEPHERD for novel disease characterization
+# Bash script to train SHEPHERD for novel disease characterization
 
 # Command to run this bash script:
 # bash run_disease_characterization.sh

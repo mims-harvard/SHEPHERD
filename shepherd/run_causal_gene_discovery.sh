@@ -1,4 +1,4 @@
-# Bash script to run SHEPHERD for causal gene discovery
+# Bash script to train SHEPHERD for causal gene discovery
 
 # Command to run this bash script:
 # bash run_causal_gene_discovery.sh
