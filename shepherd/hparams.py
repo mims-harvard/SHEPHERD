@@ -140,7 +140,6 @@ def get_run_type_args(args, hparams):
         hparams.update({
                         'model_type': 'aligner', 
                         'loss': 'gene_multisimilarity', 
-                        'candidate_disease_type': 'orphanet',
                         'use_diseases': False,
                         'add_cand_diseases': False,
                         'add_similar_patients': False,
@@ -157,20 +156,17 @@ def get_run_type_args(args, hparams):
                         'wandb_project_name': 'disease-heterogeneity',
                         'plot_disease_embed': True,
                         'plot_patient_embed': False,
-                        'alpha': 0 # NOTE: This value is not used in the novel disease characterization model
                        })
     elif args.run_type == 'patients_like_me':
         hparams.update({
                         'model_type': 'patient_NCA',
                         'loss': 'patient_patient_NCA',
-                        'candidate_disease_type': 'orphanet',
                         'use_diseases': False,
                         'add_cand_diseases': False,
                         'add_similar_patients': True,
                         'wandb_project_name': 'patients-like-me',
                         'plot_disease_embed': False,
                         'plot_patient_embed': True,
-                        'alpha': 0 # NOTE: This value is not used in the patients-like-me model
                        })
     else:
         raise Exception('You must specify run type.')
@@ -214,7 +210,7 @@ def get_patient_data_args(args, hparams):
 def get_predict_hparams(args):
     hparams = {
                'seed': 33,
-               'inference_batch_size': 512, #NOTE: make sure that inference_batch_size > # of patients you want to predict over
+               'inference_batch_size': 1024, #NOTE: make sure that inference_batch_size > # of patients you want to predict over
                'max_epochs': 100, 
                'n_gpus': 0, 
                'num_workers': 4, 
