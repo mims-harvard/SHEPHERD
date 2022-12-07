@@ -9,7 +9,7 @@ import sys
 sys.path.insert(0, '..') # add config to path
 import project_config
 
-
+# INPUT KG FILE
 snap_graph = snap.LoadEdgeList(snap.PUNGraph, str(project_config.KG_DIR / 'KG_edgelist_mask.txt'), 0, 1)
 
 t0 = time.time()
@@ -33,6 +33,8 @@ all_shortest_paths = np.stack(shortest_paths)
 print(all_shortest_paths.shape)
 t1 = time.time()
 print(f'It took {t1-t0:0.4f}s to calculate the shortest paths')
+
+# save all shortest paths
 np.save(project_config.KG_DIR / 'KG_shortest_path_matrix.npy', all_shortest_paths) 
 
 # subset to shortest paths from all nodes to phenotypes
