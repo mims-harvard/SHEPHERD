@@ -145,7 +145,6 @@ class PatientDataset(Dataset):
                 print('NOTE: The patient has multiple correct genes, but we\'re only selecting the first.')
                 correct_genes_node_idx = correct_genes_node_idx[0].unsqueeze(-1)
 
-
         # get index of correct gene
         if self.raw_data:
             label_idx = [candidate_gene_node_idx.index(g) for g in correct_genes_node_idx]

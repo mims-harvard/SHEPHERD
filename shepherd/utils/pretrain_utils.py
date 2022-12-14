@@ -12,16 +12,13 @@ import torch
 from torch import Tensor
 import torch.nn.functional as F
 from torch.nn import Sigmoid
-from torch_geometric.data import Dataset
-
+from torch_geometric.data import Dataset, NeighborSampler, Data
 
 # Sci-kit Learn
 from sklearn.metrics import roc_auc_score, average_precision_score, accuracy_score, f1_score, roc_curve, precision_recall_curve
 
 # Global variables
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-from torch_geometric.data import  NeighborSampler, Data
 
 
 def to_numpy(input):
