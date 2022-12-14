@@ -87,19 +87,18 @@ def load_patient_datasets(hparams, inference=False):
     print('loading patient datasets')
 
     if inference:
-        train_dataset=None
+        train_dataset = None
     else:
-        train_is_udn = 'udn' in hparams['train_data']
-        train_dataset = PatientDataset(project_config.PROJECT_DIR / 'patients' / hparams['train_data'],  time=hparams['time'], is_udn=train_is_udn)
+        train_dataset = PatientDataset(project_config.PROJECT_DIR / 'patients' / hparams['train_data'],  time=hparams['time'])
 
-    val_is_udn = 'udn' in hparams['validation_data']
-    val_dataset = PatientDataset(project_config.PROJECT_DIR / 'patients' / hparams['validation_data'], time=hparams['time'], is_udn=val_is_udn)
+    val_dataset = PatientDataset(project_config.PROJECT_DIR / 'patients' / hparams['validation_data'], time=hparams['time'])
 
     if inference:
-        test_is_udn = 'udn' in hparams['test_data']
-        test_dataset = PatientDataset(project_config.PROJECT_DIR / 'patients' / hparams['test_data'], time=hparams['time'], is_udn=test_is_udn)
+        test_dataset = PatientDataset(project_config.PROJECT_DIR / 'patients' / hparams['test_data'], time=hparams['time'])
 
-    else: test_dataset = None  
+    else:
+        test_dataset = None  
+    
     print('finished loading patient datasets')
     return train_dataset, val_dataset, test_dataset
 
@@ -228,7 +227,7 @@ def train(args, hparams):
         # create Weights & Biases Logger
         curr_time = datetime.now().strftime("%m_%d_%y:%H:%M:%S")
         lr = hparams['lr']   
-        val_data = hparams['validation_data'].split('.txt')[0].replace('/', '.')
+        val_data = str(hparams['validation_data']).split('.txt')[0].replace('/', '.')
         run_name = "{}_lr_{}_val_{}_losstype_{}".format(curr_time, lr, val_data, hparams['loss']).replace('patients', 'pats') 
         run_name = run_name.replace('5_candidates_mapped_only', '5cand_map').replace('8.9.21_kgsolved_manual_baylor_nobgm_distractor_genes', 'manual').replace('patient_disease_NCA', 'pd_NCA').replace('_distractor', '')
         wandb_logger = WandbLogger(name=run_name, project=hparams['wandb_project_name'], entity='rare_disease_dx', save_dir=hparams['wandb_save_dir'],

@@ -116,33 +116,17 @@ class MultisimilarityCriterion(torch.nn.Module):
 
             if not torch.sum(pos_idxs) or not torch.sum(neg_idxs):
                 print('No positive or negative examples available')
-                print('pos idx: ', pos_idxs)
-                print('neg idx: ', neg_idxs)
                 continue
 
             anchor_pos_sim = sims[i][pos_idxs]
             anchor_neg_sim = sims[i][neg_idxs]
 
-            ### This part doesn't really work, especially when you dont have a lot of positives in the batch...            
             neg_idxs = (anchor_neg_sim + self.margin) > torch.min(anchor_pos_sim)
             pos_idxs = (anchor_pos_sim - self.margin) < torch.max(anchor_neg_sim)
             if not torch.sum(neg_idxs):
                 print('No negative examples available - check 2') 
-                print(i)
-                print('neg idx: ', neg_idxs)
-                print('neg sim: ', anchor_neg_sim)
-                print('sims[i]', sims[i])
-                print('sims', sims)
-
             elif not torch.sum(pos_idxs):
                 print('No positive examples available - check 2')
-                print(i)
-                print('pos idx: ', pos_idxs)
-                print('pos sim: ', anchor_pos_sim)
-                print('sims[i]', sims[i])
-                print('sims', sims)
-                #TODO: Is it okay to avoid dropping anchors that don't meet this criteria?
-                #continue
             else:
                 anchor_neg_sim = anchor_neg_sim[neg_idxs]
                 anchor_pos_sim = anchor_pos_sim[pos_idxs]
@@ -215,8 +199,6 @@ class NCALoss(BaseMetricLossFunction):
         Returns: the loss
         """
         self.reset_stats()
-        #c_f.check_shapes(embeddings, labels)
-        #labels = c_f.to_device(labels, embeddings)
         loss_dict, disease_softmax, one_hot_labels, candidate_disease_idx, candidate_disease_embeddings = self.compute_loss(phenotype_embedding, disease_embedding, batch_disease_nid, batch_cand_disease_nid, disease_mask, one_hot_labels, indices_tuple, use_candidate_list)
         self.add_embedding_regularization_to_loss_dict(loss_dict, phenotype_embedding)
         return self.reducer(loss_dict, None, None), disease_softmax, one_hot_labels, candidate_disease_idx, candidate_disease_embeddings
@@ -252,12 +234,10 @@ class NCALoss(BaseMetricLossFunction):
         self, query, reference, labels, indices_tuple, use_one_hot_labels
     ):
         dtype = query.dtype
-        #miner_weights = lmu.convert_to_weights(indices_tuple, query_labels, dtype=dtype)
-        #print(query.shape, reference.shape)
         mat = self.distance(query, reference)
         if not self.distance.is_inverted:
             mat = -mat
-        mat = mat.squeeze(1) #added to handle broadcasting
+        mat = mat.squeeze(1)
 
         if query is reference:
             mat.fill_diagonal_(c_f.neg_inf(dtype))
@@ -271,7 +251,7 @@ class NCALoss(BaseMetricLossFunction):
 
         exp = torch.sum(softmax * labels, dim=1) 
         non_zero = exp != 0
-        loss = -torch.log(exp[non_zero]) #* miner_weights[non_zero] #TODO: add back in miner weights
+        loss = -torch.log(exp[non_zero])
         return {
             "loss": {
                 "losses": loss,

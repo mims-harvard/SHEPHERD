@@ -11,26 +11,21 @@ import re
 from torch.utils.data import Dataset
 from collections import defaultdict
 
-
-from project_utils import read_udn_patients, read_simulated_patients
+from project_utils import read_patients
 import project_config
+
 
 class PatientDataset(Dataset):
 
-    def __init__(self, filepath, gp_spl=None, is_udn=False, raw_data=False, mondo_map_file=str(project_config.PROJECT_DIR / 'mondo_references.csv'), needs_disease_mapping=False, time=False): 
+    def __init__(self, filepath, gp_spl=None, raw_data=False, mondo_map_file=str(project_config.PROJECT_DIR / 'mondo_references.csv'), needs_disease_mapping=False, time=False): 
         self.filepath = filepath
-        self.is_udn = is_udn
-        if is_udn:
-            self.patients = read_udn_patients(filepath)
-        else:
-            self.patients = read_simulated_patients(filepath)
+        self.patients = read_patients(filepath)
         print('Dataset filepath: ', filepath)
         print('Number of patients: ', len(self.patients))
 
         self.raw_data = raw_data
         self.needs_disease_mapping = needs_disease_mapping
         self.time = time
-
 
         # create HPO to node_idx map
         with open(project_config.KG_DIR / f'hpo_to_idx_dict_{project_config.CURR_KG}.pkl', 'rb') as handle:
@@ -82,7 +77,7 @@ class PatientDataset(Dataset):
         # get patients with similar diseases
         dis_to_patients = defaultdict(list)
         for patient in self.patients:
-            patient_diseases = patient['true_diseases'] if self.is_udn else [int(patient['disease_id'])]
+            patient_diseases = patient['true_diseases']
             for d in patient_diseases: 
                 dis_to_patients[d].append(patient['id'])
         self.patients_with_same_disease = defaultdict(list)
@@ -127,8 +122,8 @@ class PatientDataset(Dataset):
             candidate_gene_node_idx = [self.ensembl_to_idx_dict[g] for g in patient['all_candidate_genes'] if g in self.ensembl_to_idx_dict ]
         else: candidate_gene_node_idx = []
 
-        if self.needs_disease_mapping or not self.is_udn: 
-            orpha_diseases = [ int(d) if len(re.match("^[0-9]*", d)[0]) > 0 else d for d in patient['true_diseases']] if self.is_udn else [int(patient['disease_id'])] 
+        if self.needs_disease_mapping:
+            orpha_diseases = [ int(d) if len(re.match("^[0-9]*", d)[0]) > 0 else d for d in patient['true_diseases']]
             mondo_diseases = [mondo_d for orpha_d in set(orpha_diseases).intersection(set(self.orpha_mondo_map.keys())) for mondo_d in self.orpha_mondo_map[orpha_d]]
         else:
             mondo_diseases = [str(d) for d in patient['true_diseases']]
@@ -144,10 +139,10 @@ class PatientDataset(Dataset):
         assert len(phenotype_node_idx) >= 1, f'There are no phenotypes for patient: {patient}'
         assert len(correct_genes_node_idx) >= 1, f'There are no correct genes for patient: {patient}'
         
-        #NOTE: only runs on a SINGLE patient gene
+        #NOTE: assumes that patient has a single causal/correct gene (the model still outputs a score for each candidate gene)
         if not self.raw_data:
             if len(correct_genes_node_idx) > 1:
-                print('WARNING: The patient has multiple correct genes, but we\'re only selecting the first.')
+                print('NOTE: The patient has multiple correct genes, but we\'re only selecting the first.')
                 correct_genes_node_idx = correct_genes_node_idx[0].unsqueeze(-1)
 
 

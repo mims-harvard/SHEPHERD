@@ -8,7 +8,8 @@ import project_config
 
 ##############################################
 # Read in/write patients
-def read_udn_patients(filename):
+
+def read_patients(filename):
     patients = []
     with jsonlines.open(filename) as reader:
         for patient in reader:
@@ -16,29 +17,12 @@ def read_udn_patients(filename):
     return patients
 
 
-
-def read_simulated_patients(filename):
-    patients = []
-    with jsonlines.open(filename) as reader:
-        for patient in reader:
-            if type(patient['positive_phenotypes']) == dict:
-                patient['positive_phenotypes'] = list(patient['positive_phenotypes'].keys())
-            # if type(patient['negative_phenotypes']) == dict:
-            #     patient['negative_phenotypes'] = list(patient['negative_phenotypes'].keys())
-
-            if type(patient['distractor_genes']) == dict:
-                patient['distractor_genes'] = [gene for gene in list(patient['distractor_genes'].keys())] 
-            patients.append(patient)    
-    return patients
-
 def write_patients(patients, filename):
     with open(filename, "w") as output_file:
         for patient_dict in patients:
             json.dump(patient_dict, output_file)
             output_file.write('\n')
             
-            
-
 
 def read_dicts():
     with open(project_config.KG_DIR / f'hpo_to_idx_dict_{project_config.CURR_KG}.pkl', 'rb') as handle:

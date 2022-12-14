@@ -104,8 +104,7 @@ def predict(args):
     else: spl_indexing_dict = None 
     print('Loaded SPL information')
     
-    is_udn = 'udn' in hparams['test_data']
-    dataset = PatientDataset(project_config.PROJECT_DIR / 'patients' / hparams['test_data'], time=hparams['time'], is_udn=is_udn)
+    dataset = PatientDataset(project_config.PROJECT_DIR / 'patients' / hparams['test_data'], time=hparams['time'])
     print(f'There are {len(dataset)} patients in the test dataset')
     hparams.update({'inference_batch_size': len(dataset)})
     print('batch size: ', hparams['inference_batch_size'])
