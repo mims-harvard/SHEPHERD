@@ -69,6 +69,10 @@ The rare disease knowledge graph and patient datasets are provided in the approp
 
 Go to `project_config.py` and set the project directory (`PROJECT_DIR`) to be the path to the data folder downloaded in the previous step.
 
+If you would like to apply your own dataset to the training process, be sure to
+1. Modify the data variables in `project_config.py` in lines 10-16.
+2. Generate the required shortest path length data files for your patients using the code and instructions in `data_prep/shortest_paths`
+
 
 ### :five: (Optional) Download Model Checkpoints
 We also provide checkpoints for SHEPHERD after pretraining and after training on the rare disease diagnosis tasks. The checkpoints for SHEPHERD can be found [here](https://figshare.com/articles/software/SHEPHERD/21444873). You'll need to move them to the directory specified by `project_config.PROJECT_DIR / 'checkpoints'` (see above step). Make sure all downloaded files are unzipped. You can use these checkpoints directly with the `predict.py` scripts below instead of training the models yourself.
