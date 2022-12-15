@@ -7,7 +7,7 @@ import argparse
 sys.path.insert(0, '../..') # add config to path
 sys.path.insert(0, '..')
 import project_config
-from project_utils import read_simulated_patients, read_dicts
+from project_utils import read_patients, read_dicts
 
 '''
 python add_spl_to_patients.py  \
@@ -93,11 +93,11 @@ def main():
     patients = []
     if args.only_test_data and args.only_train_val_data: raise Exception('Your arguments "only_test_data" and "only_train_val_data" are conflicting.')
     if not args.only_test_data:
-        train_patients = read_simulated_patients(project_config.PROJECT_DIR / 'patients' / project_config.MY_TRAIN_DATA) 
-        val_patients = read_simulated_patients(project_config.PROJECT_DIR / 'patients' / project_config.MY_VAL_DATA) 
+        train_patients = read_patients(project_config.PROJECT_DIR / 'patients' / project_config.MY_TRAIN_DATA) 
+        val_patients = read_patients(project_config.PROJECT_DIR / 'patients' / project_config.MY_VAL_DATA) 
         patients = patients + train_patients + val_patients
     if not args.only_train_val_data:
-        test_patients = read_simulated_patients(project_config.PROJECT_DIR / 'patients' / project_config.MY_TEST_DATA) 
+        test_patients = read_patients(project_config.PROJECT_DIR / 'patients' / project_config.MY_TEST_DATA) 
         patients = patients + test_patients
 
     # get filenames
