@@ -163,7 +163,7 @@ class NeighborSampler(torch.utils.data.DataLoader):
         self.adj_t_sample.storage.rowptr()
 
         if node_idx is None:
-            node_idx = torch.arange(self.adj_t_sample.sparse_size(0)) #TODO: confirm this change to adj_t_sample is correct
+            node_idx = torch.arange(self.adj_t_sample.sparse_size(0)) 
         elif node_idx.dtype == torch.bool:
             node_idx = node_idx.nonzero(as_tuple=False).view(-1)
 
@@ -173,7 +173,6 @@ class NeighborSampler(torch.utils.data.DataLoader):
     
 
     def filter_edges(self, edge_index, e_id, source_nodes, target_nodes):
-        #TODO: make more efficient by not doing this twice for training
         '''
         Filter out the edges we're trying to predict in the current batch from the edge index
         NOTE: edge_index here is re-indexed
@@ -263,7 +262,6 @@ class PatientNeighborSampler(torch.utils.data.DataLoader):
         # add self loops
         sample_edge_index = torch.cat((sample_edge_index, torch.stack([edge_index.unique(), edge_index.unique()])),1 )
         sample_edge_index, _ = add_remaining_self_loops(sample_edge_index)
-        #TODO: add self loops from train index
 
         if 'collate_fn' in kwargs:
             del kwargs['collate_fn']
@@ -335,7 +333,6 @@ class PatientNeighborSampler(torch.utils.data.DataLoader):
             self.patient_dataset, collate_fn=self.collate, **kwargs)
 
     def filter_edges(self, edge_index, e_id, source_nodes, target_nodes):
-        #TODO: make more efficient by not doing this twice for training
         '''
         Filter out the edges we're trying to predict in the current batch from the edge index
         NOTE: edge_index here is re-indexed
@@ -357,7 +354,7 @@ class PatientNeighborSampler(torch.utils.data.DataLoader):
         # Get batch node indices based on patient phenotypes and genes
         source_batch = torch.cat(phenotype_node_idx +  candidate_gene_node_idx +  correct_genes_node_idx + disease_node_idx + candidate_disease_node_idx)
 
-         # Randomly sample nodes in KG # TODO: sample edges instead of nodes
+         # Randomly sample nodes in KG 
         if self.sparse_sample > 0:
             if self.relevant_node_idx == None:
                 rand_idx = torch.randint(high=self.n_nodes, size=(self.sparse_sample,)) # NOTE that this can sample duplicates, but has the benefit of randomly sampling new nodes each epoch
@@ -378,7 +375,7 @@ class PatientNeighborSampler(torch.utils.data.DataLoader):
         row, col, e_id = self.adj_t_sample.coo() 
         
         if self.sample_edges_from_train_patients:
-            train_patient_nodes = torch.tensor(list(self.train_phenotype_counter.keys()) + list(self.train_gene_counter.keys())) #TODO: this needs to be a list of all nodes found in training patients
+            train_patient_nodes = torch.tensor(list(self.train_phenotype_counter.keys()) + list(self.train_gene_counter.keys())) 
             ind_with_train_patient_nodes = (col == train_patient_nodes.unsqueeze(-1)).nonzero(as_tuple=True)[1]
             subset_row = row[ind_with_train_patient_nodes]
             subset_col = col[ind_with_train_patient_nodes]
@@ -410,7 +407,7 @@ class PatientNeighborSampler(torch.utils.data.DataLoader):
     def add_patient_information(self, patient_ids, phenotype_node_idx, candidate_gene_node_idx, correct_genes_node_idx, disease_node_idx, candidate_disease_node_idx, labels, disease_labels, patient_labels, additional_labels, adjs, batch_size, n_id, sparse_idx, target_batch): #candidate_disease_node_idx
 
         # Create Data Object & Add patient level information
-        adjs = [HeterogeneousEdgeIndex(adj.edge_index, adj.e_id, self.all_edge_attr[adj.e_id], adj.size) for adj in adjs] #TODO: we don't actually need this I think because we can juse use e_id to index into edge_attr
+        adjs = [HeterogeneousEdgeIndex(adj.edge_index, adj.e_id, self.all_edge_attr[adj.e_id], adj.size) for adj in adjs] 
         max_n_candidates = max([len(l) for l in candidate_gene_node_idx])
         data = Data(adjs = adjs, 
                 batch_size = batch_size,
