@@ -9,7 +9,7 @@ import plotly.express as px
 
 # Pytorch
 import torch
-from torch import Tensortodo
+from torch import Tensor
 import torch.nn.functional as F
 from torch.nn import Sigmoid
 from torch_geometric.data import Dataset, NeighborSampler, Data
