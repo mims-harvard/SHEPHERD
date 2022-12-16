@@ -135,7 +135,6 @@ class PatientDataset(Dataset):
             candidate_gene_node_idx = torch.LongTensor(candidate_gene_node_idx)
             disease_node_idx = torch.LongTensor(disease_node_idx)
         
-        #TODO: handle case where patient's correct gene isn't in KG
         assert len(phenotype_node_idx) >= 1, f'There are no phenotypes for patient: {patient}'
         assert len(correct_genes_node_idx) >= 1, f'There are no correct genes for patient: {patient}'
         
