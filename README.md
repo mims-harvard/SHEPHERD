@@ -192,7 +192,7 @@ To see and/or modify the default hyperparameters, please see the `get_predict_hp
 
 ## Additional Resources
 
-- [Paper]()
+- [Paper](https://www.medrxiv.org/content/10.1101/2022.12.07.22283238v1)
 - [Project Website](https://zitniklab.hms.harvard.edu/projects/SHEPHERD/)
 
 ```
