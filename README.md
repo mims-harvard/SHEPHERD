@@ -92,6 +92,8 @@ python pretrain.py \
 
 To see and/or modify the default hyperparameters, please see the `get_pretrain_hparams()` function in `shepherd/hparams.py`.
 
+An example bash script is provided in `shepherd/run_pretrain.sh`.
+
 ### Train SHEPHERD
 
 :sparkles: To run causal gene discovery:
@@ -106,6 +108,8 @@ python train.py \
         --saved_node_embeddings_path checkpoints/<BEST_PRETRAIN_CHECKPOINT>.ckpt
 ```
 
+An example bash script is provided in `shepherd/run_causal_gene_discovery.sh`.
+
 :sparkles: To run patients-like-me identification:
 
 ```
@@ -118,6 +122,8 @@ python train.py \
         --saved_node_embeddings_path checkpoints/<BEST_PRETRAIN_CHECKPOINT>.ckpt
 ```
 
+An example bash script is provided in `shepherd/run_patients_like_me.sh`.
+
 :sparkles: To run novel disease characterization:
 
 ```
@@ -129,6 +135,8 @@ python train.py \
         --run_type disease_characterization \
         --saved_node_embeddings_path checkpoints/<BEST_PRETRAIN_CHECKPOINT>.ckpt
 ```
+
+An example bash script is provided in `shepherd/run_disease_characterization.sh`.
 
 To see and/or modify the default hyperparameters, please see the `get_train_hparams()` function in `shepherd/hparams.py`.
 
