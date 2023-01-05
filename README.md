@@ -69,7 +69,7 @@ The rare disease knowledge graph and patient datasets are provided in the approp
 
 Go to `project_config.py` and set the project directory (`PROJECT_DIR`) to be the path to the data folder downloaded in the previous step.
 
-If you would like to apply your own dataset to the training process, be sure to
+If you would like to use your own data, be sure to
 1. Modify the data variables in `project_config.py` in lines 10-16.
 2. Generate the required shortest path length data files for your patients using the code and instructions in `data_prep/shortest_paths`
 
@@ -200,7 +200,7 @@ To see and/or modify the default hyperparameters, please see the `get_predict_hp
 
 ## Additional Resources
 
-- [Paper]()
+- [Paper](https://www.medrxiv.org/content/10.1101/2022.12.07.22283238v1)
 - [Project Website](https://zitniklab.hms.harvard.edu/projects/SHEPHERD/)
 
 ```

@@ -174,7 +174,7 @@ class NodeEmbeder(pl.LightningModule):
             targets_dict[int(k)] = indices
         return targets_dict
 
-    def decode(self, data, source_embeds, pos_target_embeds, all_edge_types): #TODO: should probably separate some of this code from decode function
+    def decode(self, data, source_embeds, pos_target_embeds, all_edge_types): 
         curr_source_embeds = source_embeds[data.index_to_node_features_pos,:]
         curr_pos_target_embeds = pos_target_embeds[data.index_to_node_features_pos,:]
 

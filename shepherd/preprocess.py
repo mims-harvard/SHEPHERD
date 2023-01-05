@@ -23,7 +23,6 @@ def preprocess_graph(args):
     edge_attr = edges['full_relation']
 
     # Convert edge attributes to idx
-    # TODO: do this computationally
     edge_attr_list = [
                       'effect/phenotype;phenotype_protein;gene/protein',
                       'gene/protein;phenotype_protein;effect/phenotype',

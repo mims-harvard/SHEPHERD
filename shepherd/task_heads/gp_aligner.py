@@ -42,7 +42,7 @@ class GPAligner(pl.LightningModule):
             raise NotImplementedError
 
         # projection layers
-        self.phen_project = nn.Linear(embed_dim, embed_dim) #TODO: do we want to change these dims?
+        self.phen_project = nn.Linear(embed_dim, embed_dim) 
         self.gene_project = nn.Linear(embed_dim, embed_dim)
         self.phen_project2 = nn.Linear(embed_dim, embed_dim)
         self.gene_project2 = nn.Linear(embed_dim, embed_dim)

@@ -408,9 +408,7 @@ class CombinedPatientNCA(pl.LightningModule):
             self.logger.experiment.log({f'{loop_type}/patient_embed': fit_umap(phenotype_embedding, patient_label)})
         
         if self.hparams.hparams['plot_disease_embed']:
-            # Plot embeddings of patient aggregated phenotype & diseases  
-            # #TODO: handle reshaping of disease embeddings & update with cand diseases
-            
+            # Plot embeddings of patient aggregated phenotype & diseases              
             phenotype_embedding = torch.cat([x[f'{loop_type}/patient.phenotype_embed'] for x in outputs], dim=0)
             disease_embeddings = torch.cat([x[f'{loop_type}/patient.disease_embed'] for x in outputs], dim=0) 
             disease_batch_nid = torch.cat([x[f'{loop_type}/batch_disease_nid'] for x in outputs], dim=0)
@@ -441,7 +439,6 @@ class CombinedPatientNCA(pl.LightningModule):
             self.logger.experiment.log({f'{loop_type}/softmax_diff': plot_softmax(softmax_diff)})
 
         if self.hparams.hparams['plot_attn_nhops']:
-            #TODO: check to see if this works
             # plot phenotype attention vs n_hops to gene and degree
             attn_weights = [torch.split(x[f'{loop_type}/attention_weights'],1) for x in outputs]
             attn_weights = [w[w > 0] for batch_w in attn_weights for w in batch_w]

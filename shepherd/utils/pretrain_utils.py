@@ -54,7 +54,7 @@ class HeterogeneousEdgeIndex(NamedTuple): #adopted from NeighborSampler code in 
 
 def get_batched_data(data, all_data):
     batch_size, n_id, adjs = data
-    adjs = [HeterogeneousEdgeIndex(adj.edge_index, adj.e_id, all_data.edge_attr[adj.e_id], adj.size) for adj in adjs] #TODO: we don't actually need this I think because we can juse use e_id to index into edge_attr
+    adjs = [HeterogeneousEdgeIndex(adj.edge_index, adj.e_id, all_data.edge_attr[adj.e_id], adj.size) for adj in adjs] 
     data = Data(adjs = adjs, 
                 batch_size = batch_size,
                 n_id = n_id, 

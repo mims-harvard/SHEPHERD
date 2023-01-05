@@ -410,29 +410,29 @@ class CombinedGPAligner(pl.LightningModule):
         if self.hparams.hparams['plot_frac_rank']:
 
             # Rank of gene vs. fraction of phenotypes to disease 
-            frac_p_with_direct_edge_to_dx = [pat[0][0] for x in outputs for pat in x[f'{loop_type}/frac_p_with_direct_edge_to_dx']] # Currently ony select first disease. TODO: generalize to multiple disease
+            frac_p_with_direct_edge_to_dx = [pat[0][0] for x in outputs for pat in x[f'{loop_type}/frac_p_with_direct_edge_to_dx']] # NOTE: Currently ony select first disease. 
             self.logger.experiment.log({f'{loop_type}/gene_rank_vs_frac_p_with_direct_edge_to_dx': plot_gene_rank_vs_fraction_phenotype(correct_gene_ranks.cpu(), frac_p_with_direct_edge_to_dx)})
             
             # Rank of gene vs. fraction of phenotypes to gene 
-            frac_p_with_direct_edge_to_g = [pat[0][0] for x in outputs for pat in x[f'{loop_type}/frac_p_with_direct_edge_to_g']] # Currently ony select first gene. TODO: generalize to multiple genes
+            frac_p_with_direct_edge_to_g = [pat[0][0] for x in outputs for pat in x[f'{loop_type}/frac_p_with_direct_edge_to_g']] # NOTE: Currently ony select first gene. 
             self.logger.experiment.log({f'{loop_type}/frac_p_with_direct_edge_to_g': plot_gene_rank_vs_fraction_phenotype(correct_gene_ranks.cpu(), frac_p_with_direct_edge_to_g)})
         
         if self.hparams.hparams['plot_nhops_rank']:
 
             # Rank of gene vs. hops from disease
-            nhops_g_d = [pat[0] for x in outputs for pat in x[f'{loop_type}/n_hops_g_d']] # Currently ony select first disease. TODO: generalize to multiple disease
+            nhops_g_d = [pat[0] for x in outputs for pat in x[f'{loop_type}/n_hops_g_d']] # NOTE Currently ony select first disease.
             fig_mean, fig_min = plot_gene_rank_vs_hops(correct_gene_ranks.cpu(), nhops_g_d)
             self.logger.experiment.log({f'{loop_type}/gene_rank_vs_mean_n_hops_g_d': fig_mean})
             self.logger.experiment.log({f'{loop_type}/gene_rank_vs_min_n_hops_g_d': fig_min})
 
             # Rank of gene vs. mean/min hops from phenotypes
-            nhops_g_p = [pat[0] for x in outputs for pat in x[f'{loop_type}/n_hops_g_p']] # Currently ony select first gene. TODO: generalize to multiple genes
+            nhops_g_p = [pat[0] for x in outputs for pat in x[f'{loop_type}/n_hops_g_p']] # NOTE Currently ony select first gene. 
             fig_mean, fig_min = plot_gene_rank_vs_hops(correct_gene_ranks.cpu(), nhops_g_p)
             self.logger.experiment.log({f'{loop_type}/gene_rank_vs_mean_n_hops_g_p': fig_mean})
             self.logger.experiment.log({f'{loop_type}/gene_rank_vs_min_n_hops_g_p': fig_min})
 
             # # Rank of gene vs. distance between phenotypes
-            nhops_p_p = [torch.tensor(pat) for x in outputs for pat in x[f'{loop_type}/n_hops_p_p']] #correct_gene_ranks.cpu(), [x[f'{loop_type}/n_hops_p_p'] for x in outputs]
+            nhops_p_p = [torch.tensor(pat) for x in outputs for pat in x[f'{loop_type}/n_hops_p_p']] 
             fig_mean, fig_min = plot_gene_rank_vs_hops(correct_gene_ranks.cpu(), nhops_p_p)
             self.logger.experiment.log({f'{loop_type}/gene_rank_vs_mean_n_hops_p_p': fig_mean})
             self.logger.experiment.log({f'{loop_type}/gene_rank_vs_min_n_hops_p_p': fig_min})

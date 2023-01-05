@@ -251,7 +251,6 @@ def plot_gene_rank_vs_fraction_phenotype(corr_gene_ranks, frac_p):
 
 
 def plot_gene_rank_vs_hops(corr_gene_ranks, n_hops):
-    #TODO: take avg min or avg for each phenotype
     mean_hops = []
     min_hops = []
     for hops in n_hops:
