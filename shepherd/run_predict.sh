@@ -11,7 +11,7 @@ python predict.py \
 --edgelist KG_edgelist_mask.txt \
 --node_map KG_node_map.txt \
 --saved_node_embeddings_path checkpoints/pretrain.ckpt \
---best_ckpt checkpoints/causal_gene_discovery.ckpt \
+--best_ckpt checkpoints/causal_gene_discovery.ckpt
 
 python predict.py \
 --run_type patients_like_me \
@@ -19,7 +19,7 @@ python predict.py \
 --edgelist KG_edgelist_mask.txt \
 --node_map KG_node_map.txt \
 --saved_node_embeddings_path checkpoints/pretrain.ckpt \
---best_ckpt checkpoints/patients_like_me.ckpt \
+--best_ckpt checkpoints/patients_like_me.ckpt
 
 python predict.py \
 --run_type disease_characterization \
@@ -27,4 +27,4 @@ python predict.py \
 --edgelist KG_edgelist_mask.txt \
 --node_map KG_node_map.txt \
 --saved_node_embeddings_path checkpoints/pretrain.ckpt \
---best_ckpt checkpoints/disease_characterization.ckpt \
+--best_ckpt checkpoints/disease_characterization.ckpt
