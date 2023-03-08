@@ -85,6 +85,7 @@ You can run SHEPHERD on your own patient cohort by using our provided model chec
 
 ### Pretrain on Rare Disease KG
 
+You can reproduce our pretraining results or pretrain SHEPHERD on your own knowledge graph:
 ```
 cd shepherd
 python pretrain.py \
@@ -99,7 +100,7 @@ An example bash script is provided in `shepherd/run_pretrain.sh`.
 
 ### Train SHEPHERD
 
-:sparkles: To run causal gene discovery:
+:sparkles: To train SHEPHERD for causal gene discovery:
 
 ```
 cd shepherd
@@ -113,7 +114,7 @@ python train.py \
 
 An example bash script is provided in `shepherd/run_causal_gene_discovery.sh`.
 
-:sparkles: To run patients-like-me identification:
+:sparkles: To train SHEPHERD for patients-like-me identification:
 
 ```
 cd shepherd
@@ -127,7 +128,7 @@ python train.py \
 
 An example bash script is provided in `shepherd/run_patients_like_me.sh`.
 
-:sparkles: To run novel disease characterization:
+:sparkles: To train SHEPHERD for novel disease characterization:
 
 ```
 cd shepherd
