@@ -145,7 +145,7 @@ After training SHEPHERD, you can calculate SHEPHERD's performance on a test pati
 
 ### Generate Predictions for Patients
 
-After training SHEPHERD, you can generate predictions for patients (without performance metrics).
+After training SHEPHERD, you can generate predictions for patients (without performance metrics). An example bash script can be found [here](https://github.com/mims-harvard/SHEPHERD/blob/main/shepherd/run_predict.sh).
 
 The results of the `predict.py` script are found in 
 ```
@@ -162,12 +162,13 @@ where
 cd shepherd
 python predict.py \
         --run_type causal_gene_discovery \
-        --patient_data disease_simulated \
+        --patient_data <TEST_DATA> \
         --edgelist KG_edgelist_mask.txt \
         --node_map KG_node_map.txt \
         --saved_node_embeddings_path checkpoints/<BEST_PRETRAIN_CHECKPOINT>.ckpt \
         --best_ckpt PATH/TO/BEST_MODEL_CHECKPOINT.ckpt 
 ```
+To generate predictions on your own dataset, please use `--patient_data my_data`. To generate predictions on simulated test patients, please use `--patient_data test_predict`. If using the provided checkpoint models, `checkpoints/<BEST_PRETRAIN_CHECKPOINT>.ckpt` should be `checkpoints/pretrain.ckpt` and `PATH/TO/BEST_MODEL_CHECKPOINT.ckpt` should be `checkpoints/causal_gene_discovery.ckpt`.
 
 :sparkles: To run patients-like-me identification:
 
@@ -175,12 +176,13 @@ python predict.py \
 cd shepherd
 python predict.py \
         --run_type patients_like_me \
-        --patient_data disease_simulated \
+        --patient_data <TEST_DATA> \
         --edgelist KG_edgelist_mask.txt \
         --node_map KG_node_map.txt \
         --saved_node_embeddings_path checkpoints/<BEST_PRETRAIN_CHECKPOINT>.ckpt \
         --best_ckpt PATH/TO/BEST_MODEL_CHECKPOINT.ckpt 
 ```
+To generate predictions on your own dataset, please use `--patient_data my_data`. To generate predictions on simulated test patients, please use `--patient_data test_predict`. If using the provided checkpoint models, `checkpoints/<BEST_PRETRAIN_CHECKPOINT>.ckpt` should be `checkpoints/pretrain.ckpt` and `PATH/TO/BEST_MODEL_CHECKPOINT.ckpt` should be `checkpoints/patients_like_me.ckpt`.
 
 :sparkles: To run novel disease characterization:
 
@@ -188,12 +190,13 @@ python predict.py \
 cd shepherd
 python predict.py \
         --run_type disease_characterization \
-        --patient_data disease_simulated \
+        --patient_data <TEST_DATA> \
         --edgelist KG_edgelist_mask.txt \
         --node_map KG_node_map.txt \
         --saved_node_embeddings_path checkpoints/<BEST_PRETRAIN_CHECKPOINT>.ckpt \
         --best_ckpt PATH/TO/BEST_MODEL_CHECKPOINT.ckpt 
 ```
+To generate predictions on your own dataset, please use `--patient_data my_data`. To generate predictions on simulated test patients, please use `--patient_data test_predict`. If using the provided checkpoint models, `checkpoints/<BEST_PRETRAIN_CHECKPOINT>.ckpt` should be `checkpoints/pretrain.ckpt` and `PATH/TO/BEST_MODEL_CHECKPOINT.ckpt` should be `checkpoints/disease_characterization.ckpt`.
 
 To see and/or modify the default hyperparameters, please see the `get_predict_hparams()` function in `shepherd/hparams.py`.
 
