@@ -79,6 +79,10 @@ We also provide checkpoints for SHEPHERD after pretraining and after training on
 
 ## Usage
 
+### Run SHEPHERD on Your Own Patient Cohort
+
+You can run SHEPHERD on your own patient cohort by using our provided model checkpoints (i.e., no re-training needed). Please review this [README](https://github.com/mims-harvard/SHEPHERD/blob/main/Inference-README.md) to learn how to preprocess and run SHEPHERD on your own patient dataset.
+
 ### Pretrain on Rare Disease KG
 
 ```
@@ -145,7 +149,7 @@ After training SHEPHERD, you can calculate SHEPHERD's performance on a test pati
 
 ### Generate Predictions for Patients
 
-After training SHEPHERD, you can generate predictions for patients (without performance metrics). An example bash script can be found [here](https://github.com/mims-harvard/SHEPHERD/blob/main/shepherd/run_predict.sh).
+After training SHEPHERD (you may also simply use our already-trained models), you can generate predictions for patients (without performance metrics). An example bash script can be found [here](https://github.com/mims-harvard/SHEPHERD/blob/main/shepherd/run_predict.sh).
 
 The results of the `predict.py` script are found in 
 ```
