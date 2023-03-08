@@ -12,6 +12,8 @@
 8. Generate [shortest paths calculations](https://github.com/mims-harvard/SHEPHERD/blob/main/data_prep/shortest_paths/add_spl_to_patients.py) using the flag `--only_test_data`
 9. Update `MY_SPL_DATA` and `MY_SPL_INDEX_DATA` in [`project_config.py`](https://github.com/mims-harvard/SHEPHERD/blob/main/project_config.py)
 10. Run `predict.py` to [generate predictions for your patients](https://github.com/mims-harvard/SHEPHERD#generate-predictions-for-patients)
+    - Make sure that the run type and checkpoints are aligned (i.e., use `--run_type causal_gene_discovery` with `--best_ckpt checkpoints/causal_gene_discovery`)
+    - Make sure that the patient data flag is set to your own dataset (i.e., `--patient_data my_data`)
 
 ## Results
 The output of `predict.py` consists of:
