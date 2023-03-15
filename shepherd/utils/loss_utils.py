@@ -239,17 +239,20 @@ class NCALoss(BaseMetricLossFunction):
 
         if query is reference:
             mat.fill_diagonal_(c_f.neg_inf(dtype))
-        
-        if not use_one_hot_labels:
-            labels = c_f.to_dtype(
-                labels.unsqueeze(1) == labels.unsqueeze(0), dtype=dtype
-            )
-            labels = labels.squeeze(-1)
         softmax = torch.nn.functional.softmax(self.softmax_scale * mat, dim=1)
 
-        exp = torch.sum(softmax * labels, dim=1) 
-        non_zero = exp != 0
-        loss = -torch.log(exp[non_zero])
+        print('labels', labels, labels.nelement() == 0)
+        if labels.nelement() == 0:
+            loss = None
+        else:
+            if not use_one_hot_labels:
+                labels = c_f.to_dtype(
+                    labels.unsqueeze(1) == labels.unsqueeze(0), dtype=dtype
+                )
+                labels = labels.squeeze(-1)
+            exp = torch.sum(softmax * labels, dim=1) 
+            non_zero = exp != 0
+            loss = -torch.log(exp[non_zero])
         return {
             "loss": {
                 "losses": loss,

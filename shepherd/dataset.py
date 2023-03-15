@@ -22,6 +22,11 @@ class PatientDataset(Dataset):
         self.patients = read_patients(filepath)
         print('Dataset filepath: ', filepath)
         print('Number of patients: ', len(self.patients))
+        
+        # add placeholder for true genes/diseases if they don't exist
+        for patient in self.patients:
+            if 'true_genes' not in patient: patient['true_genes'] = []
+            if 'true_diseases' not in patient: patient['true_diseases'] = []
 
         self.raw_data = raw_data
         self.needs_disease_mapping = needs_disease_mapping

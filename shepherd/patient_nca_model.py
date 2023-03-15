@@ -83,15 +83,23 @@ class CombinedPatientNCA(pl.LightningModule):
     def rank_diseases(self, disease_softmax, disease_mask, labels):
         disease_mask = (disease_mask.sum(dim=1) > 0).unsqueeze(-1) # convert (batch, n_diseases) -> (batch, 1)
         disease_softmax =  disease_softmax + (~disease_mask * -100000) # we want to rank the padded values last
-        disease_ranks = torch.tensor(np.apply_along_axis(lambda row: rankdata(row * -1, method='average'), axis=1, arr=disease_softmax.detach().cpu().numpy())).to(labels.device)
-        correct_disease_ranks = [ranks[lab == 1] for ranks, lab in zip(disease_ranks, labels)]
+        disease_ranks = torch.tensor(np.apply_along_axis(lambda row: rankdata(row * -1, method='average'), axis=1, arr=disease_softmax.detach().cpu().numpy()))
+        if labels is None:
+            correct_disease_ranks = None
+        else:
+            disease_ranks = disease_ranks.to(labels.device)
+            correct_disease_ranks = [ranks[lab == 1] for ranks, lab in zip(disease_ranks, labels)]
 
         return correct_disease_ranks
 
     def rank_patients(self, patient_softmax, labels):
         labels = labels * ~torch.eye(labels.shape[0], dtype=torch.bool).to(labels.device) # don't consider label positive for patients with themselves
-        patient_ranks = torch.tensor(np.apply_along_axis(lambda row: rankdata(row * -1, method='average'), axis=1, arr=patient_softmax.detach().cpu().numpy())).to(labels.device)
-        correct_patient_ranks = [ranks[lab == 1] for ranks, lab in zip(patient_ranks, labels)]
+        patient_ranks = torch.tensor(np.apply_along_axis(lambda row: rankdata(row * -1, method='average'), axis=1, arr=patient_softmax.detach().cpu().numpy()))
+        if labels is None:
+            correct_patient_ranks = None
+        else:
+            patient_ranks = patient_ranks.to(labels.device)
+            correct_patient_ranks = [ranks[lab == 1] for ranks, lab in zip(patient_ranks, labels)]
 
         return correct_patient_ranks, labels
     
