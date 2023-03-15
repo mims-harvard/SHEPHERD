@@ -141,9 +141,6 @@ def predict(args):
     
     print('---- RESULTS ----')
     output_base = project_config.PROJECT_DIR / 'results'/  (str(args.best_ckpt).replace('/', '.').split('.ckpt')[0]) 
-    ranks_df = pd.concat(ranks_dfs).reset_index(drop=True)
-    ranks_df.to_csv(str(output_base) + '_ranks.csv', index=False)
-    print(ranks_df)
 
     scores_df = pd.concat(scores_dfs).reset_index(drop=True)
     scores_df.to_csv(str(output_base) + '_scores.csv', index=False)

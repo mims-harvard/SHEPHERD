@@ -237,8 +237,8 @@ class CombinedGPAligner(pl.LightningModule):
             all_corr_ranks.append(rank.item())
         ranks_df = pd.DataFrame({'patient_id': all_patient_ids, 'ranks': all_corr_ranks})
         print(ranks_df.head())
-        if save:
-            ranks_df.to_csv(Path(run_folder)  / 'ranks.csv', sep = ',', index=False)
+        #if save:
+        #    ranks_df.to_csv(Path(run_folder)  / 'ranks.csv', sep = ',', index=False)
         
         # Save scores
         all_sims, all_genes, all_patient_ids, all_labels = [], [], [], []

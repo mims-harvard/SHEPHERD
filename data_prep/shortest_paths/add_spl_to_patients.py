@@ -54,11 +54,11 @@ def main():
 
     parser.add_argument("--node_map", type=str, default='KG_node_map.txt', help="Path to node map")
     parser.add_argument("--spl_matrix", type=str, default='KG_shortest_path_matrix_onlyphenotypes.npy', help="Path to shortest path length matrix")
-    parser.add_argument("--agg_type", type=str, default='mean', help="Path to simulated patients")
+    parser.add_argument("--agg_type", type=str, default='mean', help="Type of aggregation")
     parser.add_argument("--save_prefix", type=str, default=f'disease_split_all_sim_patients_kg_{project_config.CURR_KG}', help="Prefix describing the dataset that will be used to describe the SPL output files")
 
-    parser.add_argument('--only_test_data', action='store_true', help='Only include test data. You might want to do this if you have separate runs for many different test datasets and want to generate separate SPL for train/val & testing')
-    parser.add_argument('--only_train_val_data', action='store_true', help='Only include train/val data. You might want to do this if you have separate runs for many different test datasets and want to generate separate SPL for train/val & testing')
+    parser.add_argument('--only_test_data', action='store_true', help='Only calculate SPL for the test data. You might want to do this if you have separate runs for many different test datasets and want to generate separate SPL for train/val & testing')
+    parser.add_argument('--only_train_val_data', action='store_true', help='Only calculate SPL for the train/val data. You might want to do this if you have separate runs for many different test datasets and want to generate separate SPL for train/val & testing')
 
     
     args = parser.parse_args()
