@@ -211,9 +211,6 @@ class CombinedGPAligner(pl.LightningModule):
     def write_results_to_file(self, batch_info, phen_gene_sims, gene_mask, phenotype_mask, attn_weights, correct_gene_ranks, gat_attn, node_embeddings, phenotype_embeddings, save=True, loop_type='predict'):
         # NOTE: only saves a single batch - to run at inference time, make sure batch size includes all patients
 
-        if save:
-            run_folder = Path(project_config.PROJECT_DIR) / 'results' / 'causal_gene_discovery' / self.hparams.hparams['run_name'] / (Path(self.predict_dataloader.dataloader.dataset.filepath).stem )
-            run_folder.mkdir(parents=True, exist_ok=True)
         
         # Save GAT attention weights
         #NOTE: assumes 3 layers to model
@@ -227,8 +224,6 @@ class CombinedGPAligner(pl.LightningModule):
             for head in range(attn.shape[1]):
                 gat_attn_df[f'attn_{head}'] =  attn[:,head]
             attn_dfs.append(gat_attn_df)
-            if save:
-                gat_attn_df.to_csv(Path(run_folder)  / f'gat_attn_layer={layer}.csv', sep = ',', index=False) 
             layer += 1
         
         
@@ -239,12 +234,7 @@ class CombinedGPAligner(pl.LightningModule):
             all_sims.extend(nonpadded_sims)
             all_genes.extend(genes)
             all_patient_ids.extend([patient_id] * len(genes))
-            all_labels.extend(nonpadded_labels)
         results_df = pd.DataFrame({'patient_id': all_patient_ids, 'genes': all_genes, 'similarities': all_sims})
-        #print(results_df.head())
-        if save:
-            print('logging results to run dir: ', run_folder)
-            results_df.to_csv(Path(run_folder)  /'scores.csv', sep = ',', index=False)
 
         # Save phenotype information
         if attn_weights is None:
@@ -259,16 +249,12 @@ class CombinedGPAligner(pl.LightningModule):
                 all_attn_weights.extend(attn_w[p_mask].tolist())
             phen_df = pd.DataFrame({'patient_id': all_patient_ids, 'phenotypes': all_phens, 'degrees': all_degrees, 'attention':all_attn_weights})
             print(phen_df.head())
-            if save:
-                phen_df.to_csv(Path(run_folder) /'phenotype_attention.csv', sep = ',', index=False)
-        
-        # Save embeddings
-        if save:
-            print("Node embeddings size", node_embeddings.shape)
-            print("Phenotype embeddings size", phenotype_embeddings.shape)
-            torch.save(batch_info["n_id"].cpu(), Path(run_folder) /'node_embeddings_idx.pth')
-            torch.save(node_embeddings.cpu(), Path(run_folder) /'node_embeddings.pth')
-            torch.save(phenotype_embeddings.cpu(), Path(run_folder) /'phenotype_embeddings.pth')
+
+        # # Save embeddings
+        # if save:
+        #     print("Node embeddings size", node_embeddings.shape)
+        #     torch.save(batch_info["n_id"].cpu(), Path(run_folder) /'node_embeddings_idx.pth')
+        #     torch.save(node_embeddings.cpu(), Path(run_folder) /'node_embeddings.pth')
         
         return results_df, phen_df, attn_dfs, phenotype_embeddings.cpu()
   
@@ -342,9 +328,9 @@ class CombinedGPAligner(pl.LightningModule):
         
         # node_embedder_loss, patient_loss, correct_gene_ranks, roc_score, ap_score, acc, f1, node_embeddings, gat_attn, phenotype_embedding, candidate_gene_embeddings, attn_weights, phen_gene_sims, raw_phen_gene_sims, gene_mask, phenotype_mask = self._step(batch, 'test')
 
-        ranks_df, results_df, phen_df, attn_dfs, phenotype_embeddings = self.write_results_to_file(batch, phen_gene_sims, gene_mask, phenotype_mask, attn_weights, correct_gene_ranks, gat_attn, node_embeddings, phenotype_embedding, save=True)
-        print(phenotype_embeddings)
-        return ranks_df, results_df, phen_df, *attn_dfs, phenotype_embeddings
+        results_df, phen_df, attn_dfs, phenotype_embeddings = self.write_results_to_file(batch, phen_gene_sims, gene_mask, phenotype_mask, attn_weights, correct_gene_ranks, gat_attn, node_embeddings, phenotype_embedding, save=True)
+        disease_embeddings = None
+        return results_df, phen_df, *attn_dfs, phenotype_embeddings, disease_embeddings
 
     def _epoch_end(self, outputs, loop_type):
 

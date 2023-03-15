@@ -57,12 +57,12 @@ class PatientDataset(Dataset):
         with open(str(project_config.KG_DIR / f'degree_dict_{project_config.CURR_KG}.pkl'), 'rb') as handle:
             self.degree_dict = pickle.load(handle)
 
-        missing_patients = [patient for patient in self.patients  if len(set(patient['true_genes']).difference(set(list(self.ensembl_to_idx_dict)))) > 0 ]
-        print(f'There are {len(missing_patients)} patients of {len(self.patients)} whose correct gene is not in the KG')
-        print('patients with missing causal genes in KG: ', [p['id'] for p in missing_patients])
-        print('len patients before filtering out patients with causal genes: ', len(self.patients))
-        self.patients = [patient for patient in self.patients if len(set(patient['true_genes']).difference(set(list(self.ensembl_to_idx_dict)))) == 0 ]
-        print('len patients after filtering out patients with causal genes: ', len(self.patients))
+        # missing_patients = [patient for patient in self.patients  if len(set(patient['true_genes']).difference(set(list(self.ensembl_to_idx_dict)))) > 0 ]
+        # print(f'There are {len(missing_patients)} patients of {len(self.patients)} whose correct gene is not in the KG')
+        # print('patients with missing causal genes in KG: ', [p['id'] for p in missing_patients])
+        # print('len patients before filtering out patients with causal genes: ', len(self.patients))
+        # self.patients = [patient for patient in self.patients if len(set(patient['true_genes']).difference(set(list(self.ensembl_to_idx_dict)))) == 0 ]
+        # print('len patients after filtering out patients with causal genes: ', len(self.patients))
 
         # get patients with similar genes
         if all(['true_genes' in patient for patient in self.patients]): # first check to make sure all patients have true genes

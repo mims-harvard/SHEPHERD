@@ -346,9 +346,9 @@ class CombinedPatientNCA(pl.LightningModule):
         if self.hparams.hparams['loss'] == 'patient_disease_NCA': correct_ranks = self.rank_diseases(softmax, disease_mask, labels)
         else: correct_ranks, labels = self.rank_patients(softmax, labels)
 
-        ranks_df, results_df, phen_df, attn_dfs, phenotype_embeddings, disease_embeddings = self.write_results_to_file(batch, softmax, correct_ranks, labels, phenotype_mask, disease_mask , attn_weights, gat_attn, node_embeddings, phenotype_embedding, disease_embeddings, save=True, loop_type='predict')
+        results_df, phen_df, attn_dfs, phenotype_embeddings, disease_embeddings = self.write_results_to_file(batch, softmax, correct_ranks, labels, phenotype_mask, disease_mask , attn_weights, gat_attn, node_embeddings, phenotype_embedding, disease_embeddings, save=True, loop_type='predict')
 
-        return ranks_df, results_df, phen_df, *attn_dfs, phenotype_embeddings, disease_embeddings
+        return results_df, phen_df, *attn_dfs, phenotype_embeddings, disease_embeddings
 
     
     def _epoch_end(self, outputs, loop_type):

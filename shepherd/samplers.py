@@ -487,7 +487,6 @@ class PatientNeighborSampler(torch.utils.data.DataLoader):
         data['batch_pheno_nid']  = torch.LongTensor(np.vectorize(node2batch.get)(data['batch_pheno_nid']))
         if len(candidate_gene_node_idx[0]) > 0:
             data['batch_cand_gene_nid'] = torch.LongTensor(np.vectorize(node2batch.get)(data['batch_cand_gene_nid']))
-        print(correct_genes_node_idx)
         if len(correct_genes_node_idx[0]) > 0:
             data['batch_corr_gene_nid'] = torch.LongTensor(np.vectorize(node2batch.get)(data['batch_corr_gene_nid']))
         if self.use_diseases:
