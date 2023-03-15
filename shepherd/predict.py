@@ -7,6 +7,7 @@ import os
 import sys
 from pathlib import Path
 from datetime import datetime
+import time
 from collections import Counter
 import pandas as pd
 
@@ -129,7 +130,11 @@ def predict(args):
     model = get_model(args, hparams, None, all_data, edge_attr_dict,  n_nodes,load_from_checkpoint=True)
 
     trainer = pl.Trainer(gpus=hparams['n_gpus'])
+    
+    t1 = time.time()
     results = trainer.predict(model, dataloaders=dataloader)
+    t2 = time.time()
+    print(f"Predicting took {t2 - t1:0.4f} seconds", len(dataset), "patients")
 
     print('results length: ', len(results))
     ranks_dfs, scores_dfs, attn_dfs, gat_attn_df_1, gat_attn_df_2, gat_attn_df_3 = zip(*results)

@@ -206,7 +206,6 @@ def get_patient_data_args(args, hparams):
 def get_predict_hparams(args):
     hparams = {
                'seed': 33,
-               'inference_batch_size': args.batch_sz, #NOTE: make sure that inference_batch_size > # of patients you want to predict over
                'max_epochs': 100, 
                'n_gpus': 0, # NOTE: currently predict scripts only work with CPU
                'num_workers': 4, 
