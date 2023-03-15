@@ -140,8 +140,11 @@ class GPAligner(pl.LightningModule):
     def _rank_genes(self, phen_gene_sims, gene_mask, one_hot_labels):
         phen_gene_sims = phen_gene_sims * gene_mask
         padded_phen_gene_sims = phen_gene_sims + (~gene_mask * -100000) # we want to rank the padded values last
-        gene_ranks = torch.tensor(np.apply_along_axis(lambda row: rankdata(row * -1, method='average'), axis=1, arr=padded_phen_gene_sims.detach().cpu().numpy())).to(one_hot_labels.device)
-        correct_gene_ranks = gene_ranks[one_hot_labels == 1]
+        gene_ranks = torch.tensor(np.apply_along_axis(lambda row: rankdata(row * -1, method='average'), axis=1, arr=padded_phen_gene_sims.detach().cpu().numpy()))
+        if one_hot_labels is None: correct_gene_ranks = None
+        else: 
+            gene_ranks = gene_ranks.to(one_hot_labels.device)
+            correct_gene_ranks = gene_ranks[one_hot_labels == 1]
         return correct_gene_ranks, padded_phen_gene_sims
 
     def calc_loss(self, sims, mask, one_hot_labels):

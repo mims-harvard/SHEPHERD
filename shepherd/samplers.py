@@ -415,13 +415,15 @@ class PatientNeighborSampler(torch.utils.data.DataLoader):
                 n_id = n_id
                 )
         if self.hparams['loss'] != 'patient_disease_NCA' and self.hparams['loss'] != 'patient_patient_NCA':
-            data['one_hot_labels'] = torch.LongTensor(label_binarize(labels, classes = list(range(max_n_candidates))))
+            if None in list(labels): data['one_hot_labels'] = None
+            else: data['one_hot_labels'] = torch.LongTensor(label_binarize(labels, classes = list(range(max_n_candidates))))
 
         if self.use_diseases:
             data['disease_one_hot_labels'] = disease_labels 
 
         if self.hparams['loss'] == 'patient_patient_NCA':
-            data['patient_labels'] = torch.stack(patient_labels)
+            if patient_labels is None: data['patient_labels'] = None
+            else: data['patient_labels'] = torch.stack(patient_labels)
 
         # Get candidate genes to phenotypes SPL
         if not self.gp_spl is None:
@@ -485,7 +487,9 @@ class PatientNeighborSampler(torch.utils.data.DataLoader):
         data['batch_pheno_nid']  = torch.LongTensor(np.vectorize(node2batch.get)(data['batch_pheno_nid']))
         if len(candidate_gene_node_idx[0]) > 0:
             data['batch_cand_gene_nid'] = torch.LongTensor(np.vectorize(node2batch.get)(data['batch_cand_gene_nid']))
-        data['batch_corr_gene_nid'] = torch.LongTensor(np.vectorize(node2batch.get)(data['batch_corr_gene_nid']))
+        print(correct_genes_node_idx)
+        if len(correct_genes_node_idx[0]) > 0:
+            data['batch_corr_gene_nid'] = torch.LongTensor(np.vectorize(node2batch.get)(data['batch_corr_gene_nid']))
         if self.use_diseases:
             data['batch_disease_nid'] = torch.LongTensor(np.vectorize(node2batch.get)(data['batch_disease_nid']))
             data['batch_cand_disease_nid'] = torch.LongTensor(np.vectorize(node2batch.get)(data['batch_cand_disease_nid']))

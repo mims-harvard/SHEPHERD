@@ -65,26 +65,27 @@ class PatientDataset(Dataset):
         print('len patients after filtering out patients with causal genes: ', len(self.patients))
 
         # get patients with similar genes
-        genes_to_patients = defaultdict(list)
-        for patient in self.patients:
-            for g in patient['true_genes']:
-                genes_to_patients[g].append(patient['id'])
-        self.patients_with_same_gene = defaultdict(list)
-        for patients in genes_to_patients.values():
-            for p in patients:
-                self.patients_with_same_gene[p].extend([pat for pat in patients if pat != p])
+        if all(['true_genes' in patient for patient in self.patients]): # first check to make sure all patients have true genes
+            genes_to_patients = defaultdict(list)
+            for patient in self.patients:
+                for g in patient['true_genes']:
+                    genes_to_patients[g].append(patient['id'])
+            self.patients_with_same_gene = defaultdict(list)
+            for patients in genes_to_patients.values():
+                for p in patients:
+                    self.patients_with_same_gene[p].extend([pat for pat in patients if pat != p])
 
         # get patients with similar diseases
-        dis_to_patients = defaultdict(list)
-        for patient in self.patients:
-            patient_diseases = patient['true_diseases']
-            for d in patient_diseases: 
-                dis_to_patients[d].append(patient['id'])
-        self.patients_with_same_disease = defaultdict(list)
-        for patients in dis_to_patients.values():
-            for p in patients:
-                self.patients_with_same_disease[p].extend([pat for pat in patients if pat != p])
-
+        if all(['true_diseases' in patient for patient in self.patients]): # first check to make sure all patients have true diseases
+            dis_to_patients = defaultdict(list)
+            for patient in self.patients:
+                patient_diseases = patient['true_diseases']
+                for d in patient_diseases: 
+                    dis_to_patients[d].append(patient['id'])
+            self.patients_with_same_disease = defaultdict(list)
+            for patients in dis_to_patients.values():
+                for p in patients:
+                    self.patients_with_same_disease[p].extend([pat for pat in patients if pat != p])
 
         # map from patient id to index in dataset
         self.patient_id_to_index = {p['id']:i for i, p in enumerate(self.patients)}
@@ -122,21 +123,23 @@ class PatientDataset(Dataset):
             candidate_gene_node_idx = [self.ensembl_to_idx_dict[g] for g in patient['all_candidate_genes'] if g in self.ensembl_to_idx_dict ]
         else: candidate_gene_node_idx = []
 
-        if self.needs_disease_mapping:
-            orpha_diseases = [ int(d) if len(re.match("^[0-9]*", d)[0]) > 0 else d for d in patient['true_diseases']]
-            mondo_diseases = [mondo_d for orpha_d in set(orpha_diseases).intersection(set(self.orpha_mondo_map.keys())) for mondo_d in self.orpha_mondo_map[orpha_d]]
-        else:
-            mondo_diseases = [str(d) for d in patient['true_diseases']]
-        disease_node_idx = [self.disease_to_idx_dict[d] for d in mondo_diseases if d in self.disease_to_idx_dict]
-
+        if 'true_diseases' in patient:
+            if self.needs_disease_mapping:
+                orpha_diseases = [ int(d) if len(re.match("^[0-9]*", d)[0]) > 0 else d for d in patient['true_diseases']]
+                mondo_diseases = [mondo_d for orpha_d in set(orpha_diseases).intersection(set(self.orpha_mondo_map.keys())) for mondo_d in self.orpha_mondo_map[orpha_d]]
+            else:
+                mondo_diseases = [str(d) for d in patient['true_diseases']]
+            disease_node_idx = [self.disease_to_idx_dict[d] for d in mondo_diseases if d in self.disease_to_idx_dict]
+        else: disease_node_idx = None
+        
         if not self.raw_data:
             phenotype_node_idx = torch.LongTensor(phenotype_node_idx)
             correct_genes_node_idx = torch.LongTensor(correct_genes_node_idx)
             candidate_gene_node_idx = torch.LongTensor(candidate_gene_node_idx)
-            disease_node_idx = torch.LongTensor(disease_node_idx)
+            if 'true_diseases' in patient: disease_node_idx = torch.LongTensor(disease_node_idx)
+            
         
         assert len(phenotype_node_idx) >= 1, f'There are no phenotypes for patient: {patient}'
-        assert len(correct_genes_node_idx) >= 1, f'There are no correct genes for patient: {patient}'
         
         #NOTE: assumes that patient has a single causal/correct gene (the model still outputs a score for each candidate gene)
         if not self.raw_data:
@@ -145,10 +148,13 @@ class PatientDataset(Dataset):
                 correct_genes_node_idx = correct_genes_node_idx[0].unsqueeze(-1)
 
         # get index of correct gene
-        if self.raw_data:
-            label_idx = [candidate_gene_node_idx.index(g) for g in correct_genes_node_idx]
+        if len(correct_genes_node_idx) == 0: # no correct genes available for the patient
+            label_idx = None
         else:
-            label_idx = (candidate_gene_node_idx == correct_genes_node_idx[0]).nonzero(as_tuple=True)[0]
+            if self.raw_data:
+                label_idx = [candidate_gene_node_idx.index(g) for g in correct_genes_node_idx]
+            else:
+                label_idx = (candidate_gene_node_idx == correct_genes_node_idx[0]).nonzero(as_tuple=True)[0]
 
         if self.time:
             t1 = time.time()
