@@ -136,7 +136,7 @@ def predict(args):
     t2 = time.time()
     print(f"Predicting took {t2 - t1:0.4f} seconds", len(dataset), "patients")
 
-    ranks_dfs, scores_dfs, attn_dfs, gat_attn_df_1, gat_attn_df_2, gat_attn_df_3, phenotype_embeddings, disease_embeddings = zip(*results)
+    scores_dfs, attn_dfs, gat_attn_df_1, gat_attn_df_2, gat_attn_df_3, phenotype_embeddings, disease_embeddings = zip(*results)
     
     print('---- RESULTS ----')
     if not os.path.exists(project_config.PROJECT_DIR / 'results_test_mkdir'):

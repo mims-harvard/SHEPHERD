@@ -206,41 +206,27 @@ class CombinedPatientNCA(pl.LightningModule):
             run_folder = Path(project_config.PROJECT_DIR) / 'results' / task / self.hparams.hparams['run_name'] / (Path(self.predict_dataloader.dataloader.dataset.filepath).stem ) #.replce('/', '_')
             run_folder.mkdir(parents=True, exist_ok=True)
         
-        # if there is no correct patient/disease, then the score is -1
-        all_patient_ids, all_corr_ranks = [],[]
-        for patient_id, ranks in zip(batch['patient_ids'], correct_ranks):
-            ranks = [-1] if len(ranks) == 0 else ranks.tolist()
-            all_patient_ids.extend([patient_id] * len(ranks))
-            all_corr_ranks.extend(ranks)
-        ranks_df = pd.DataFrame({'patient_id': all_patient_ids, 'ranks': all_corr_ranks})
-        print(ranks_df.head())
-        if save:
-            ranks_df.to_csv(Path(run_folder)  / 'ranks.csv', sep = ',', index=False) #wandb.run.dir
-        
+     
         # Save scores
-        
         if self.hparams.hparams['loss'] == 'patient_disease_NCA':
             cand_disease_names = [d for d_list in batch['cand_disease_names'] for d in d_list]
 
-            all_sims, all_diseases, all_patient_ids, all_labels = [], [], [], [] 
-            for patient_id, sims, labs in zip(batch['patient_ids'], softmax, labels):  #batch['cand_disease_names'], disease_mask, 
+            all_sims, all_diseases, all_patient_ids = [], [], []
+            for patient_id, sims in zip(batch['patient_ids'], softmax):  #batch['cand_disease_names'], disease_mask, 
                 sims = sims.tolist() 
-                labels = labs.tolist() 
                 all_sims.extend(sims)
                 all_diseases.extend(cand_disease_names)
                 all_patient_ids.extend([patient_id] * len(sims))
-                all_labels.extend(labels)
-            results_df = pd.DataFrame({'patient_id': all_patient_ids, 'diseases': all_diseases, 'similarities': all_sims, 'correct_label':all_labels})
+            results_df = pd.DataFrame({'patient_id': all_patient_ids, 'diseases': all_diseases, 'similarities': all_sims})
         else:
-            all_sims, all_cand_pats, all_patient_ids, all_labels = [], [], [], []
-            for patient_id, sims, labs in zip(batch['patient_ids'], softmax,labels):
+            all_sims, all_cand_pats, all_patient_ids = [], [], []
+            for patient_id, sims in zip(batch['patient_ids'], softmax):
                 patient_mask = torch.Tensor([p_id != patient_id for p_id in batch['patient_ids']]).bool()
                 remaining_pats = [p_id for p_id in batch['patient_ids'] if p_id != patient_id]
                 all_sims.extend(sims[patient_mask].tolist())
                 all_cand_pats.extend(remaining_pats)
                 all_patient_ids.extend([patient_id] * len(remaining_pats))
-                all_labels.extend(labs[patient_mask].tolist())
-            results_df = pd.DataFrame({'patient_id': all_patient_ids, 'candidate_patients': all_cand_pats, 'similarities': all_sims, 'correct_label':all_labels})
+            results_df = pd.DataFrame({'patient_id': all_patient_ids, 'candidate_patients': all_cand_pats, 'similarities': all_sims})
         print(results_df.head())
         if save:
             print('logging results to run dir: ', run_folder)
@@ -287,7 +273,7 @@ class CombinedPatientNCA(pl.LightningModule):
             if self.hparams.hparams['loss'] == 'patient_disease_NCA': torch.save(disease_embeddings.cpu(), Path(run_folder) /'disease_embeddings.pth')        
         if self.hparams.hparams['loss'] == 'patient_disease_NCA': disease_embeddings = disease_embeddings.cpu()
 
-        return ranks_df, results_df, phen_df, attn_dfs, phenotype_embeddings.cpu(), disease_embeddings
+        return results_df, phen_df, attn_dfs, phenotype_embeddings.cpu(), disease_embeddings
 
     def test_step(self, batch, batch_idx):
         correct_ranks, softmax, labels, node_embedder_loss, patient_loss, roc_score, ap_score, acc, f1, gat_attn, node_embeddings, phenotype_embedding, disease_embeddings, phenotype_mask, disease_mask, attn_weights, cand_disease_idx, cand_disease_embeddings = self._step(batch, 'test')

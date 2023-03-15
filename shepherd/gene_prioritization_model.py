@@ -231,26 +231,17 @@ class CombinedGPAligner(pl.LightningModule):
                 gat_attn_df.to_csv(Path(run_folder)  / f'gat_attn_layer={layer}.csv', sep = ',', index=False) 
             layer += 1
         
-        all_patient_ids, all_corr_ranks = [],[]
-        for patient_id, rank in zip(batch_info["patient_ids"], correct_gene_ranks):
-            all_patient_ids.append(patient_id)
-            all_corr_ranks.append(rank.item())
-        ranks_df = pd.DataFrame({'patient_id': all_patient_ids, 'ranks': all_corr_ranks})
-        print(ranks_df.head())
-        #if save:
-        #    ranks_df.to_csv(Path(run_folder)  / 'ranks.csv', sep = ',', index=False)
         
         # Save scores
         all_sims, all_genes, all_patient_ids, all_labels = [], [], [], []
-        for patient_id, sims, genes, g_mask, labels in zip(batch_info["patient_ids"], phen_gene_sims, batch_info["cand_gene_names"], gene_mask, batch_info["one_hot_labels"]):
+        for patient_id, sims, genes, g_mask in zip(batch_info["patient_ids"], phen_gene_sims, batch_info["cand_gene_names"], gene_mask):
             nonpadded_sims = sims[g_mask].tolist()
-            nonpadded_labels = labels[g_mask].tolist()
             all_sims.extend(nonpadded_sims)
             all_genes.extend(genes)
             all_patient_ids.extend([patient_id] * len(genes))
             all_labels.extend(nonpadded_labels)
-        results_df = pd.DataFrame({'patient_id': all_patient_ids, 'genes': all_genes, 'similarities': all_sims, 'correct_gene_label':all_labels})
-        print(results_df.head())
+        results_df = pd.DataFrame({'patient_id': all_patient_ids, 'genes': all_genes, 'similarities': all_sims})
+        #print(results_df.head())
         if save:
             print('logging results to run dir: ', run_folder)
             results_df.to_csv(Path(run_folder)  /'scores.csv', sep = ',', index=False)
@@ -279,7 +270,7 @@ class CombinedGPAligner(pl.LightningModule):
             torch.save(node_embeddings.cpu(), Path(run_folder) /'node_embeddings.pth')
             torch.save(phenotype_embeddings.cpu(), Path(run_folder) /'phenotype_embeddings.pth')
         
-        return ranks_df, results_df, phen_df, attn_dfs, phenotype_embeddings.cpu()
+        return results_df, phen_df, attn_dfs, phenotype_embeddings.cpu()
   
     def test_step(self, batch, batch_idx):
         node_embedder_loss, patient_loss, correct_gene_ranks, roc_score, ap_score, acc, f1, node_embeddings, gat_attn, phenotype_embedding, candidate_gene_embeddings, attn_weights, phen_gene_sims, raw_phen_gene_sims, gene_mask, phenotype_mask = self._step(batch, 'test')
