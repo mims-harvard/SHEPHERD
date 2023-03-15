@@ -136,22 +136,33 @@ def predict(args):
     t2 = time.time()
     print(f"Predicting took {t2 - t1:0.4f} seconds", len(dataset), "patients")
 
-    print('results length: ', len(results))
-    ranks_dfs, scores_dfs, attn_dfs, gat_attn_df_1, gat_attn_df_2, gat_attn_df_3 = zip(*results)
+    ranks_dfs, scores_dfs, attn_dfs, gat_attn_df_1, gat_attn_df_2, gat_attn_df_3, phenotype_embeddings, disease_embeddings = zip(*results)
     
     print('---- RESULTS ----')
-    output_base = project_config.PROJECT_DIR / 'results'/  (str(args.best_ckpt).replace('/', '.').split('.ckpt')[0]) 
+    if not os.path.exists(project_config.PROJECT_DIR / 'results_test_mkdir'):
+        os.mkdir(project_config.PROJECT_DIR / 'results_test_mkdir')
+    output_base = project_config.PROJECT_DIR / 'results_test_mkdir' /  (str(args.best_ckpt).replace('/', '.').split('.ckpt')[0])     
 
+    # Save scores
     scores_df = pd.concat(scores_dfs).reset_index(drop=True)
     scores_df.to_csv(str(output_base) + '_scores.csv', index=False)
     print(scores_df)
 
+    # Save patient phenotype attention
     attn_df = pd.concat(attn_dfs).reset_index(drop=True)
     attn_df.to_csv(str(output_base) + '_phenotype_attn.csv', index=False)
     print(attn_df)
 
+    # Save patient phenotype embeddings
+    if type(phenotype_embeddings) == tuple: phenotype_embeddings = phenotype_embeddings[0]
+    torch.save(phenotype_embeddings, str(output_base) + '_phenotype_embeddings.pth')
+    print("Phenotype embeddings", phenotype_embeddings)
 
-
+    # Save disease embeddings
+    if args.run_type == "disease_characterization":
+        if type(disease_embeddings) == tuple: disease_embeddings = disease_embeddings[0]
+        torch.save(disease_embeddings, str(output_base) + '_disease_embeddings.pth')
+        print("Disease embeddings", disease_embeddings)
 
 
 if __name__ == "__main__":

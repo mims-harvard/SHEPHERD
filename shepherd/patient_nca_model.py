@@ -198,7 +198,7 @@ class CombinedPatientNCA(pl.LightningModule):
                                 })
         return batch_results 
 
-    def write_results_to_file(self, batch, softmax, correct_ranks, labels, phenotype_mask, disease_mask, attn_weights,  gat_attn, node_embeddings, phenotype_embeddings,disease_embeddings, save=True, loop_type='predict'):
+    def write_results_to_file(self, batch, softmax, correct_ranks, labels, phenotype_mask, disease_mask, attn_weights,  gat_attn, node_embeddings, phenotype_embeddings, disease_embeddings, save=True, loop_type='predict'):
         
         if save:
             if self.hparams.hparams['loss'] == 'patient_disease_NCA': task = 'disease_characterization'
@@ -284,9 +284,10 @@ class CombinedPatientNCA(pl.LightningModule):
             torch.save(batch["n_id"].cpu(), Path(run_folder) /'node_embeddings_idx.pth')
             torch.save(node_embeddings.cpu(), Path(run_folder) /'node_embeddings.pth')
             torch.save(phenotype_embeddings.cpu(), Path(run_folder) /'phenotype_embeddings.pth')
-            if self.hparams.hparams['loss'] == 'patient_disease_NCA': torch.save(disease_embeddings.cpu(), Path(run_folder) /'disease_embeddings.pth')
+            if self.hparams.hparams['loss'] == 'patient_disease_NCA': torch.save(disease_embeddings.cpu(), Path(run_folder) /'disease_embeddings.pth')        
+        if self.hparams.hparams['loss'] == 'patient_disease_NCA': disease_embeddings = disease_embeddings.cpu()
 
-        return ranks_df, results_df, phen_df, attn_dfs
+        return ranks_df, results_df, phen_df, attn_dfs, phenotype_embeddings.cpu(), disease_embeddings
 
     def test_step(self, batch, batch_idx):
         correct_ranks, softmax, labels, node_embedder_loss, patient_loss, roc_score, ap_score, acc, f1, gat_attn, node_embeddings, phenotype_embedding, disease_embeddings, phenotype_mask, disease_mask, attn_weights, cand_disease_idx, cand_disease_embeddings = self._step(batch, 'test')
@@ -359,9 +360,9 @@ class CombinedPatientNCA(pl.LightningModule):
         if self.hparams.hparams['loss'] == 'patient_disease_NCA': correct_ranks = self.rank_diseases(softmax, disease_mask, labels)
         else: correct_ranks, labels = self.rank_patients(softmax, labels)
 
-        ranks_df, results_df, phen_df, attn_dfs = self.write_results_to_file(batch, softmax, correct_ranks, labels, phenotype_mask, disease_mask , attn_weights, gat_attn, node_embeddings, phenotype_embedding, disease_embeddings, save=True, loop_type='predict')
+        ranks_df, results_df, phen_df, attn_dfs, phenotype_embeddings, disease_embeddings = self.write_results_to_file(batch, softmax, correct_ranks, labels, phenotype_mask, disease_mask , attn_weights, gat_attn, node_embeddings, phenotype_embedding, disease_embeddings, save=True, loop_type='predict')
 
-        return ranks_df, results_df, phen_df, *attn_dfs
+        return ranks_df, results_df, phen_df, *attn_dfs, phenotype_embeddings, disease_embeddings
 
     
     def _epoch_end(self, outputs, loop_type):
@@ -389,7 +390,7 @@ class CombinedPatientNCA(pl.LightningModule):
                 cand_disease_batch_nid = torch.cat([x[f'{loop_type}/batch_cand_disease_nid'] for x in outputs], dim=0)
             else: cand_disease_batch_nid = None
 
-            ranks_df, results_df, phen_df, attn_dfs = self.write_results_to_file(batch_info, softmax, correct_ranks_with_pad, labels, phenotype_mask, disease_mask, attn_weights, gat_attn, node_embeddings, phenotype_embedding, disease_embeddings, save=True, loop_type='test')
+            ranks_df, results_df, phen_df, attn_dfs, phenotype_embeddings, disease_embeddings = self.write_results_to_file(batch_info, softmax, correct_ranks_with_pad, labels, phenotype_mask, disease_mask, attn_weights, gat_attn, node_embeddings, phenotype_embedding, disease_embeddings, save=True, loop_type='test')
 
         if self.hparams.hparams['plot_patient_embed']:
             phenotype_embedding = torch.cat([x[f'{loop_type}/patient.phenotype_embed'] for x in outputs], dim=0)
