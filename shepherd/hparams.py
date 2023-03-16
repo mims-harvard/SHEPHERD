@@ -206,10 +206,8 @@ def get_patient_data_args(args, hparams):
 def get_predict_hparams(args):
     hparams = {
                'seed': 33,
-               'max_epochs': 100, 
                'n_gpus': 0, # NOTE: currently predict scripts only work with CPU
                'num_workers': 4, 
-               'precision': 16, 
                'profiler': 'simple',
                'pin_memory': False,
                'time': False,
@@ -221,7 +219,7 @@ def get_predict_hparams(args):
                'candidate_disease_type': 'all_kg_nodes', 
                'only_hard_distractors': False, # Flag when true only uses the curated hard distractors at train time
                'patient_similarity_type': 'gene', # How we determine labels for similar patients in "Patients Like Me"
-               'n_similar_patients': 2, # Number of patients with the same gene/disease that we add to the batch
+               'n_similar_patients': 2, # (Patients Like Me only) Number of patients with the same gene/disease that we add to the batch
     }
 
     # Get hyperparameters based on run type arguments

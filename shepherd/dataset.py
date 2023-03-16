@@ -149,7 +149,7 @@ class PatientDataset(Dataset):
         #NOTE: assumes that patient has a single causal/correct gene (the model still outputs a score for each candidate gene)
         if not self.raw_data:
             if len(correct_genes_node_idx) > 1:
-                print('NOTE: The patient has multiple correct genes, but we\'re only selecting the first.')
+                #print('NOTE: The patient has multiple correct genes, but we\'re only selecting the first.')
                 correct_genes_node_idx = correct_genes_node_idx[0].unsqueeze(-1)
 
         # get index of correct gene

@@ -175,7 +175,7 @@ def get_model(args, hparams, node_hparams, all_data, edge_attr_dict, n_nodes, lo
     if hparams['model_type'] == 'aligner':
         if load_from_checkpoint: 
             comb_patient_model = CombinedGPAligner.load_from_checkpoint(checkpoint_path=str(Path(project_config.PROJECT_DIR /  args.best_ckpt)), 
-                                    edge_attr_dict=edge_attr_dict, all_data=all_data, n_nodes=n_nodes, node_hparams=node_hparams)
+                                    edge_attr_dict=edge_attr_dict, all_data=all_data, n_nodes=n_nodes, node_ckpt = hparams["saved_checkpoint_path"], node_hparams=node_hparams)
         else:
             comb_patient_model = CombinedGPAligner(edge_attr_dict=edge_attr_dict, all_data=all_data, n_nodes=n_nodes, hparams=hparams, node_hparams=node_hparams)
     elif hparams['model_type'] == 'patient_NCA':
