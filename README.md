@@ -53,7 +53,7 @@ bash install_pyg.sh
 
 ### :three: Download Datasets
 
-The data is hosted on [Harvard Dataverse](https://doi.org/10.7910/DVN/TZTPFL). To maintain the directory structure while downloading the files, make sure to select all files and download in the original format.
+The data is hosted on [Harvard Dataverse](https://doi.org/10.7910/DVN/TZTPFL). To maintain the directory structure while downloading the files, make sure to select all files and download in the original format. Make sure to also unzip all files in the download (e.g. [this file](https://dataverse.harvard.edu/file.xhtml?fileId=6697676&version=2.0))
 
 We provide the following datasets for training SHEPHERD:
 - Rare disease knowledge graph
