@@ -139,9 +139,9 @@ def predict(args):
     scores_dfs, attn_dfs, gat_attn_df_1, gat_attn_df_2, gat_attn_df_3, phenotype_embeddings, disease_embeddings = zip(*results)
     
     print('---- RESULTS ----')
-    if not os.path.exists(project_config.PROJECT_DIR / 'results_test_mkdir'):
-        os.mkdir(project_config.PROJECT_DIR / 'results_test_mkdir')
-    output_base = project_config.PROJECT_DIR / 'results_test_mkdir' /  (str(args.best_ckpt).replace('/', '.').split('.ckpt')[0])     
+    if not os.path.exists(project_config.PROJECT_DIR / 'results'):
+        os.mkdir(project_config.PROJECT_DIR / 'results')
+    output_base = project_config.PROJECT_DIR / 'results' /  (str(args.best_ckpt).replace('/', '.').split('.ckpt')[0])     
 
     # Save scores
     scores_df = pd.concat(scores_dfs).reset_index(drop=True)
