@@ -293,7 +293,7 @@ class PatientNeighborSampler(torch.utils.data.DataLoader):
         self.use_diseases = use_diseases
         self.hparams = hparams
 
-        # for SPL
+        # For SPL
         self.nid_to_spl_dict = nid_to_spl_dict 
         self.gp_spl = gp_spl
         self.spl_indexing_dict = spl_indexing_dict
@@ -484,14 +484,16 @@ class PatientNeighborSampler(torch.utils.data.DataLoader):
             data['batch_cand_disease_nid'] = pad_sequence(candidate_disease_node_idx, batch_first=True, padding_value=0) 
 
         # Convert KG node IDs to batch IDs
-        data['batch_pheno_nid']  = torch.LongTensor(np.vectorize(node2batch.get)(data['batch_pheno_nid']))
-        if len(candidate_gene_node_idx[0]) > 0:
-            data['batch_cand_gene_nid'] = torch.LongTensor(np.vectorize(node2batch.get)(data['batch_cand_gene_nid']))
-        if len(correct_genes_node_idx[0]) > 0:
-            data['batch_corr_gene_nid'] = torch.LongTensor(np.vectorize(node2batch.get)(data['batch_corr_gene_nid']))
-        if self.use_diseases:
-            data['batch_disease_nid'] = torch.LongTensor(np.vectorize(node2batch.get)(data['batch_disease_nid']))
-            data['batch_cand_disease_nid'] = torch.LongTensor(np.vectorize(node2batch.get)(data['batch_cand_disease_nid']))
+        # When performing inference (i.e., predict.py), use the original node IDs because the full KG is used in forward pass of node model
+        if self.dataset_type != "predict":
+            data['batch_pheno_nid']  = torch.LongTensor(np.vectorize(node2batch.get)(data['batch_pheno_nid']))
+            if len(candidate_gene_node_idx[0]) > 0:
+                data['batch_cand_gene_nid'] = torch.LongTensor(np.vectorize(node2batch.get)(data['batch_cand_gene_nid']))
+            if len(correct_genes_node_idx[0]) > 0:
+                data['batch_corr_gene_nid'] = torch.LongTensor(np.vectorize(node2batch.get)(data['batch_corr_gene_nid']))
+            if self.use_diseases:
+                data['batch_disease_nid'] = torch.LongTensor(np.vectorize(node2batch.get)(data['batch_disease_nid']))
+                data['batch_cand_disease_nid'] = torch.LongTensor(np.vectorize(node2batch.get)(data['batch_cand_disease_nid']))
 
         return data
 
