@@ -85,7 +85,7 @@ class GPAligner(pl.LightningModule):
 
 
     def _calc_similarity(self, phenotype_embeddings, candidate_gene_embeddings, disease_embeddings, batch_cand_gene_nid,  batch_corr_gene_nid, batch_disease_nid, one_hot_labels, gene_mask, phenotype_mask, disease_mask, use_candidate_list, cand_gene_to_phenotypes_spl, alpha): 
-        # Normalize Embeddings
+        # Normalize Embeddings (within each individual patient)
         phenotype_embeddings = F.normalize(phenotype_embeddings, p=2, dim=1) 
         batch_sz = phenotype_embeddings.shape[0]
         if disease_embeddings != None: disease_embeddings = F.normalize(disease_embeddings.squeeze(), p=2, dim=1) 
