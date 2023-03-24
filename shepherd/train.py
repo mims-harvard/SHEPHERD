@@ -88,16 +88,15 @@ def load_patient_datasets(hparams, inference=False):
 
     if inference:
         train_dataset = None
+        val_dataset = None
     else:
         train_dataset = PatientDataset(project_config.PROJECT_DIR / 'patients' / hparams['train_data'],  time=hparams['time'])
-
-    val_dataset = PatientDataset(project_config.PROJECT_DIR / 'patients' / hparams['validation_data'], time=hparams['time'])
+        val_dataset = PatientDataset(project_config.PROJECT_DIR / 'patients' / hparams['validation_data'], time=hparams['time'])
 
     if inference:
         test_dataset = PatientDataset(project_config.PROJECT_DIR / 'patients' / hparams['test_data'], time=hparams['time'])
-
     else:
-        test_dataset = None  
+        test_dataset = None
     
     print('finished loading patient datasets')
     return train_dataset, val_dataset, test_dataset
@@ -133,7 +132,9 @@ def get_dataloaders(hparams, all_data, nid_to_spl_dict, n_nodes, gene_phen_dis_n
     print('Loaded SPL information')
     
 
-    if inference: train_dataloader = None
+    if inference:
+        train_dataloader = None
+        val_dataloader = None
     else:
         print('setting up train dataloader')         
         train_dataloader = PatientNeighborSampler('train', all_data.edge_index[:,all_data.train_mask], all_data.edge_index[:,all_data.train_mask], 
@@ -144,15 +145,16 @@ def get_dataloaders(hparams, all_data, nid_to_spl_dict, n_nodes, gene_phen_dis_n
                         upsample_cand=hparams['upsample_cand'], n_cand_diseases=hparams['n_cand_diseases'], use_diseases=hparams['use_diseases'], nid_to_spl_dict=nid_to_spl_dict, gp_spl=spl, spl_indexing_dict=spl_indexing_dict,
                         hparams=hparams, pin_memory=hparams['pin_memory'])
         print('finished setting up train dataloader')
-    print('setting up val dataloader')
-    val_dataloader = PatientNeighborSampler('val', all_data.edge_index, all_data.edge_index[:,all_data.val_mask], 
-                    sizes = [-1,10,5], patient_dataset=val_dataset, batch_size = batch_sz, 
-                    sparse_sample = sparse_sample, all_edge_attributes=all_data.edge_attr, n_nodes = n_nodes, 
-                    relevant_node_idx=gene_phen_dis_node_idx, 
-                    shuffle = False, train_phenotype_counter=phenotype_counter, train_gene_counter=gene_counter, sample_edges_from_train_patients=hparams['sample_edges_from_train_patients'], num_workers=hparams['num_workers'],
-                    n_cand_diseases=hparams['n_cand_diseases'], use_diseases=hparams['use_diseases'], nid_to_spl_dict=nid_to_spl_dict, gp_spl=spl, spl_indexing_dict=spl_indexing_dict,
-                    hparams=hparams,  pin_memory=hparams['pin_memory'])
-    print('finished setting up val dataloader')
+        print('setting up val dataloader')
+        val_dataloader = PatientNeighborSampler('val', all_data.edge_index, all_data.edge_index[:,all_data.val_mask], 
+                        sizes = [-1,10,5], patient_dataset=val_dataset, batch_size = batch_sz, 
+                        sparse_sample = sparse_sample, all_edge_attributes=all_data.edge_attr, n_nodes = n_nodes, 
+                        relevant_node_idx=gene_phen_dis_node_idx, 
+                        shuffle = False, train_phenotype_counter=phenotype_counter, train_gene_counter=gene_counter, sample_edges_from_train_patients=hparams['sample_edges_from_train_patients'], num_workers=hparams['num_workers'],
+                        n_cand_diseases=hparams['n_cand_diseases'], use_diseases=hparams['use_diseases'], nid_to_spl_dict=nid_to_spl_dict, gp_spl=spl, spl_indexing_dict=spl_indexing_dict,
+                        hparams=hparams,  pin_memory=hparams['pin_memory'])
+        print('finished setting up val dataloader')
+    
     print('setting up test dataloader')
     if inference:
         sizes = [-1,10,5]
@@ -163,9 +165,9 @@ def get_dataloaders(hparams, all_data, nid_to_spl_dict, n_nodes, gene_phen_dis_n
                         shuffle = False, num_workers=hparams['num_workers'],
                         n_cand_diseases=hparams['test_n_cand_diseases'],  use_diseases=hparams['use_diseases'], nid_to_spl_dict=nid_to_spl_dict, gp_spl=spl, spl_indexing_dict=spl_indexing_dict,
                         hparams=hparams, pin_memory=hparams['pin_memory']) 
-
     else: test_dataloader = None
     print('finished setting up test dataloader')
+    
     return train_dataloader, val_dataloader, test_dataloader
 
 
@@ -312,20 +314,18 @@ def inference(args, hparams):
     # Get logger & trainer
     curr_time = datetime.now().strftime("%m_%d_%y:%H:%M:%S")
     lr = hparams['lr']   
-    val_data = hparams['validation_data'].split('.txt')[0].replace('/', '.')
-    run_name = "{}_lr_{}_test_{}".format(curr_time, lr, val_data)
+    test_data = hparams['test_data'].split('.txt')[0].replace('/', '.')
+    run_name = "{}_lr_{}_test_{}".format(curr_time, lr, test_data)
     wandb_logger = WandbLogger(run_name, project=hparams['wandb_project_name'], entity='rare_disease_dx', save_dir=hparams['wandb_save_dir'])
     print('Run name: ', run_name)
     hparams['run_name'] = run_name
-    checkpoint_path = (project_config.PROJECT_DIR / 'checkpoints' / hparams['model_type'] / run_name) 
-    hparams['checkpoint_path'] = checkpoint_path
 
     # Get datasets
     train_dataset, val_dataset, test_dataset = load_patient_datasets(hparams, inference=True)
 
     # Get dataloader
     nid_to_spl_dict = {nid: idx for idx, nid in enumerate(nodes[nodes["node_type"] == "gene/protein"]["node_idx"].tolist())}
-    train_dataloader, val_dataloader, test_dataloader = get_dataloaders(hparams, all_data, nid_to_spl_dict,
+    _, _, test_dataloader = get_dataloaders(hparams, all_data, nid_to_spl_dict,
                                                                         n_nodes, gene_phen_dis_node_idx, 
                                                                         train_dataset, val_dataset, test_dataset, inference=True)
 
