@@ -260,7 +260,7 @@ class CombinedGPAligner(pl.LightningModule):
         #     torch.save(batch_info["n_id"].cpu(), Path(run_folder) /'node_embeddings_idx.pth')
         #     torch.save(node_embeddings.cpu(), Path(run_folder) /'node_embeddings.pth')
         
-        return results_df, phen_df, attn_dfs, phenotype_embeddings.cpu()
+        return results_df, phen_df, attn_dfs, phenotype_embeddings.cpu(), None
   
     def test_step(self, batch, batch_idx):
         node_embedder_loss, patient_loss, correct_gene_ranks, roc_score, ap_score, acc, f1, node_embeddings, gat_attn, phenotype_embedding, candidate_gene_embeddings, attn_weights, phen_gene_sims, raw_phen_gene_sims, gene_mask, phenotype_mask = self._step(batch, 'test')
@@ -283,7 +283,8 @@ class CombinedGPAligner(pl.LightningModule):
 
 
     def inference(self, batch, batch_idx):
-        outputs, gat_attn = self.node_model.predict(self.all_data)
+        #outputs, gat_attn = self.node_model.predict(self.all_data)
+        outputs, gat_attn = self.node_model.forward(batch.n_id, batch.adjs)
         pad_outputs = torch.cat([torch.zeros(1, outputs.size(1), device=outputs.device), outputs])
         t1 = time.time()
 
@@ -332,8 +333,7 @@ class CombinedGPAligner(pl.LightningModule):
         
         # node_embedder_loss, patient_loss, correct_gene_ranks, roc_score, ap_score, acc, f1, node_embeddings, gat_attn, phenotype_embedding, candidate_gene_embeddings, attn_weights, phen_gene_sims, raw_phen_gene_sims, gene_mask, phenotype_mask = self._step(batch, 'test')
 
-        results_df, phen_df, attn_dfs, phenotype_embeddings = self.write_results_to_file(batch, phen_gene_sims, gene_mask, phenotype_mask, attn_weights, correct_gene_ranks, gat_attn, node_embeddings, phenotype_embedding, save=True)
-        disease_embeddings = None
+        results_df, phen_df, attn_dfs, phenotype_embeddings, disease_embeddings = self.write_results_to_file(batch, phen_gene_sims, gene_mask, phenotype_mask, attn_weights, correct_gene_ranks, gat_attn, node_embeddings, phenotype_embedding, save=True)
         return results_df, phen_df, *attn_dfs, phenotype_embeddings, disease_embeddings
 
     def _epoch_end(self, outputs, loop_type):
@@ -357,7 +357,7 @@ class CombinedGPAligner(pl.LightningModule):
             node_embeddings = torch.cat([x[f'{loop_type}/node.embed'] for x in outputs], dim=0)
             phenotype_embedding = torch.cat([x[f'{loop_type}/patient.phenotype_embed'] for x in outputs], dim=0)
             
-            ranks_df, results_df, phen_df, attn_dfs, phenotype_embeddings = self.write_results_to_file(batch_info, phen_gene_sims, gene_mask, phenotype_mask, attn_weights, correct_gene_ranks, gat_attn, node_embeddings, phenotype_embedding, loop_type=loop_type)
+            results_df, phen_df, attn_dfs, phenotype_embeddings, disease_embeddings = self.write_results_to_file(batch_info, phen_gene_sims, gene_mask, phenotype_mask, attn_weights, correct_gene_ranks, gat_attn, node_embeddings, phenotype_embedding, loop_type=loop_type)
 
         # Plot embeddings
         if loop_type != "train" and len(self.train_patient_nodes) > 0 and self.hparams.hparams['plot_intrain']:
