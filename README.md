@@ -214,7 +214,7 @@ To see and/or modify the default hyperparameters, please see the `get_predict_hp
 @article{shepherd,
   title={Deep learning for diagnosing patients with rare genetic diseases},
   author={Alsentzer, Emily and Li, Michelle M. and Kobren, Shilpa and Undiagnosed Diseases Network and Kohane, Isaac S. and Zitnik, Marinka},
-  journal={bioRxiv},
+  journal={medRxiv},
   year={2022}
 }
 ```
