@@ -243,7 +243,6 @@ class NCALoss(BaseMetricLossFunction):
             mat.fill_diagonal_(c_f.neg_inf(dtype))
         softmax = torch.nn.functional.softmax(self.softmax_scale * mat, dim=1)
 
-        print('labels', labels, labels.nelement() == 0)
         if labels.nelement() == 0:
             loss_dict = None
         else:
