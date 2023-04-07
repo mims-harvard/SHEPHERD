@@ -199,7 +199,9 @@ class NCALoss(BaseMetricLossFunction):
         self.reset_stats()
         loss_dict, disease_softmax, one_hot_labels, candidate_disease_idx, candidate_disease_embeddings = self.compute_loss(phenotype_embedding, disease_embedding, batch_disease_nid, batch_cand_disease_nid, disease_mask, one_hot_labels, indices_tuple, use_candidate_list)
         self.add_embedding_regularization_to_loss_dict(loss_dict, phenotype_embedding)
-        return self.reducer(loss_dict, None, None), disease_softmax, one_hot_labels, candidate_disease_idx, candidate_disease_embeddings
+        if loss_dict is None: reduction = None
+        else: reduction = self.reducer(loss_dict, None, None)
+        return reduction, disease_softmax, one_hot_labels, candidate_disease_idx, candidate_disease_embeddings
 
     # https://www.cs.toronto.edu/~hinton/absps/nca.pdf
     def compute_loss(self, phenotype_embedding, disease_embedding, batch_corr_disease_nid, batch_cand_disease_nid, disease_mask, labels, indices_tuple, use_candidate_list):
@@ -243,7 +245,7 @@ class NCALoss(BaseMetricLossFunction):
 
         print('labels', labels, labels.nelement() == 0)
         if labels.nelement() == 0:
-            loss = None
+            loss_dict = None
         else:
             if not use_one_hot_labels:
                 labels = c_f.to_dtype(
@@ -253,13 +255,15 @@ class NCALoss(BaseMetricLossFunction):
             exp = torch.sum(softmax * labels, dim=1) 
             non_zero = exp != 0
             loss = -torch.log(exp[non_zero])
-        return {
-            "loss": {
-                "losses": loss,
-                "indices": c_f.torch_arange_from_size(query)[non_zero],
-                "reduction_type": "element",
+            indices =  c_f.torch_arange_from_size(query)[non_zero]
+            loss_dict = {
+                "loss": {
+                    "losses": loss,
+                    "indices": indices,
+                    "reduction_type": "element",
+                }
             }
-        }, softmax, labels
+        return loss_dict, softmax, labels
 
     def get_default_distance(self):
         return LpDistance(power=2)

@@ -368,7 +368,6 @@ class PatientNeighborSampler(torch.utils.data.DataLoader):
             source_batch = torch.unique(source_batch)
             sparse_idx = torch.Tensor([])
 
-        
         return source_batch, sparse_idx
 
     def sample_target_nodes(self, source_batch):

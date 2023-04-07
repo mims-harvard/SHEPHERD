@@ -29,23 +29,24 @@ import project_config
 
 class CombinedPatientNCA(pl.LightningModule):
 
-    def __init__(self, edge_attr_dict, all_data, n_nodes, hparams=None, node_hparams=None):
+    def __init__(self, edge_attr_dict, all_data, n_nodes=None, node_ckpt=None, hparams=None):
         super().__init__()
         self.save_hyperparameters('hparams') 
 
-        print('Saved combined model hyperparameters: ', self.hparams)
+        #print('Saved combined model hyperparameters: ', self.hparams)
 
         self.all_data = all_data
 
         self.all_train_nodes = []
         self.train_patient_nodes = []
 
-        print(f"Loading Node Embedder from {self.hparams.hparams['saved_checkpoint_path']}")
+        print(f"Loading Node Embedder from {node_ckpt}")
         
         # NOTE: loads in saved hyperparameters
-        self.node_model = NodeEmbeder.load_from_checkpoint(checkpoint_path=self.hparams.hparams['saved_checkpoint_path'], 
-                                                           all_data=all_data, edge_attr_dict=edge_attr_dict, 
-                                                           num_nodes=n_nodes, combined_training=self.hparams.hparams['combined_training'], spl_mat=None) 
+        self.node_model = NodeEmbeder.load_from_checkpoint(checkpoint_path=node_ckpt,
+                                                           all_data=all_data,
+                                                           edge_attr_dict=edge_attr_dict, 
+                                                           num_nodes=n_nodes)
     
         # NOTE: this will only work with GATv2Conv
         self.patient_model = PatientNCA(hparams, embed_dim=self.node_model.hparams.hp_dict['output']*self.node_model.hparams.hp_dict['n_heads'])
@@ -323,6 +324,8 @@ class CombinedPatientNCA(pl.LightningModule):
     
     def inference(self, batch, batch_idx):
         outputs, gat_attn = self.node_model.predict(self.all_data)
+        #outputs, gat_attn = self.node_model.forward(batch.n_id, batch.adjs)
+
         pad_outputs = torch.cat([torch.zeros(1, outputs.size(1), device=outputs.device), outputs]) 
 
         # get masks
@@ -351,11 +354,15 @@ class CombinedPatientNCA(pl.LightningModule):
         if self.hparams.hparams['loss'] == 'patient_disease_NCA': labels = batch.disease_one_hot_labels
         else: labels = batch.patient_labels
         loss, softmax, labels, candidate_disease_idx, candidate_disease_embeddings = self.patient_model.calc_loss(batch, phenotype_embedding, disease_embeddings, disease_mask, labels, use_candidate_list)
-        if self.hparams.hparams['loss'] == 'patient_disease_NCA': correct_ranks = self.rank_diseases(softmax, disease_mask, labels)
-        else: correct_ranks, labels = self.rank_patients(softmax, labels)
+        print('labels', labels, labels.nelement())
+        if labels.nelement() == 0:
+            correct_ranks = None
+        else:
+            if self.hparams.hparams['loss'] == 'patient_disease_NCA': correct_ranks = self.rank_diseases(softmax, disease_mask, labels)
+            else: correct_ranks, labels = self.rank_patients(softmax, labels)
+        
 
         results_df, phen_df, attn_dfs, phenotype_embeddings, disease_embeddings = self.write_results_to_file(batch, softmax, correct_ranks, labels, phenotype_mask, disease_mask , attn_weights, gat_attn, node_embeddings, phenotype_embedding, disease_embeddings, save=True, loop_type='predict')
-
         return results_df, phen_df, *attn_dfs, phenotype_embeddings, disease_embeddings
 
     

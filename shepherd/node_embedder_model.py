@@ -32,8 +32,6 @@ class NodeEmbeder(pl.LightningModule):
         # save hyperparameters
         self.save_hyperparameters("hp_dict", ignore=["spl_mat"])
 
-        print('Saved hyperparameters: ', self.hparams)
-
         # Data
         self.all_data = all_data
         self.edge_attr_dict = edge_attr_dict
