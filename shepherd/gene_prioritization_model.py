@@ -30,15 +30,13 @@ from utils.train_utils import fit_umap, mrr_vs_percent_overlap, plot_gene_rank_v
 
 class CombinedGPAligner(pl.LightningModule):
 
-    def __init__(self, edge_attr_dict, all_data, n_nodes=None, node_ckpt = None, hparams=None, node_hparams=None,  spl_pca=[], spl_gate=[]):
+    def __init__(self, edge_attr_dict, all_data, n_nodes=None, node_ckpt=None, hparams=None, node_hparams=None,  spl_pca=[], spl_gate=[]):
         super().__init__()
         print('Initializing Model')
 
         self.save_hyperparameters('hparams', ignore=["spl_pca", "spl_gate"]) # spl_pca and spl_gate never get used
 
-        print("Node checkpoint:", node_ckpt)
-
-        print('Saved combined model hyperparameters: ', self.hparams)
+        #print('Saved combined model hyperparameters: ', self.hparams)
 
         self.all_data = all_data
 
@@ -52,10 +50,10 @@ class CombinedGPAligner(pl.LightningModule):
         print(f"Loading Node Embedder from {node_ckpt}")
 
         # NOTE: loads in saved hyperparameters
-        self.node_model = NodeEmbeder.load_from_checkpoint(checkpoint_path=node_ckpt, #self.hparams.hparams['saved_checkpoint_path'], 
-                                                           all_data=all_data, edge_attr_dict=edge_attr_dict, 
+        self.node_model = NodeEmbeder.load_from_checkpoint(checkpoint_path=node_ckpt, 
+                                                           all_data=all_data,
+                                                           edge_attr_dict=edge_attr_dict, 
                                                            num_nodes=n_nodes)
-                                                           #num_nodes=n_nodes, combined_training=self.hparams.hparams['combined_training']) 
         
         self.patient_model = self.get_patient_model()
         print('End Patient Model Initialization')

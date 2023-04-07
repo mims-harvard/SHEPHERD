@@ -29,7 +29,7 @@ import project_config
 
 class CombinedPatientNCA(pl.LightningModule):
 
-    def __init__(self, edge_attr_dict, all_data, n_nodes, hparams=None, node_hparams=None):
+    def __init__(self, edge_attr_dict, all_data, n_nodes=None, node_ckpt=None, hparams=None):
         super().__init__()
         self.save_hyperparameters('hparams') 
 
@@ -40,12 +40,13 @@ class CombinedPatientNCA(pl.LightningModule):
         self.all_train_nodes = []
         self.train_patient_nodes = []
 
-        print(f"Loading Node Embedder from {self.hparams.hparams['saved_checkpoint_path']}")
+        print(f"Loading Node Embedder from {node_ckpt}")
         
         # NOTE: loads in saved hyperparameters
-        self.node_model = NodeEmbeder.load_from_checkpoint(checkpoint_path=self.hparams.hparams['saved_checkpoint_path'], 
-                                                           all_data=all_data, edge_attr_dict=edge_attr_dict, 
-                                                           num_nodes=n_nodes, combined_training=self.hparams.hparams['combined_training'], spl_mat=None) 
+        self.node_model = NodeEmbeder.load_from_checkpoint(checkpoint_path=node_ckpt,
+                                                           all_data=all_data,
+                                                           edge_attr_dict=edge_attr_dict, 
+                                                           num_nodes=n_nodes)
     
         # NOTE: this will only work with GATv2Conv
         self.patient_model = PatientNCA(hparams, embed_dim=self.node_model.hparams.hp_dict['output']*self.node_model.hparams.hp_dict['n_heads'])
