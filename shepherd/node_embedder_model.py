@@ -386,7 +386,7 @@ class NodeEmbeder(pl.LightningModule):
                 x = F.leaky_relu(x)
                 if self.norm_method == "batch_layer":
                     x = self.batch_norms[i](x)
-                x = F.dropout(x, p=self.dropout, training=self.training)
+                #x = F.dropout(x, p=self.dropout, training=self.training)
                 
         return x, gat_attn
 
