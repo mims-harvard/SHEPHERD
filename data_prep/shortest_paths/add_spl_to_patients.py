@@ -106,9 +106,9 @@ def main():
 
     print(f'There are {len(patients)} patients in the dataset')
     patients_spl_matrix, spl_indexing = add_spl_info(patients, spl_matrix, hpo_to_idx_dict, ensembl_to_idx_dict, nid_to_spl_dict, min_spl, max_spl , all_gene_idx, args.agg_type, x_max)
-    with open(str(project_config.PROJECT_DIR / 'patients' / spl_matrix_fname), 'wb') as handle:
+    with open(str(project_config.PROJECT_DIR / 'patients' / spl_index_fname), 'wb') as handle:
         pickle.dump(spl_indexing, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    np.save(str(project_config.PROJECT_DIR / 'patients' / spl_index_fname), patients_spl_matrix)
+    np.save(str(project_config.PROJECT_DIR / 'patients' / spl_matrix_fname), patients_spl_matrix)
 
 
 if __name__ == "__main__":

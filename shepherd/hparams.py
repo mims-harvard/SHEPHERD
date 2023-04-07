@@ -183,6 +183,12 @@ def get_patient_data_args(args, hparams):
                         'spl': f'simulated_patients/disease_split_all_sim_patients_{project_config.CURR_KG}_spl_matrix.npy',
                         'spl_index': f'simulated_patients/disease_split_all_sim_patients_{project_config.CURR_KG}_spl_index_dict.pkl'
                         })
+    elif args.patient_data == "test_predict_50":
+        hparams.update({
+                        'test_data': f'simulated_patients/subset_50_disease_split_val_sim_patients_{project_config.CURR_KG}.txt',
+                        'spl': f'simulated_patients/disease_split_all_sim_patients_{project_config.CURR_KG}_spl_matrix.npy',
+                        'spl_index': f'simulated_patients/disease_split_all_sim_patients_{project_config.CURR_KG}_spl_index_dict.pkl'
+                        })
     elif args.patient_data == "my_data":
         hparams.update({'train_data': project_config.MY_TRAIN_DATA,
                         'validation_data': project_config.MY_VAL_DATA,

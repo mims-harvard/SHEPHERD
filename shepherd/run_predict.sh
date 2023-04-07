@@ -11,7 +11,7 @@
 # Command to run the predict script for each task. Comment out tasks you don't want to generate predictions for. 
 python predict.py \
 --run_type causal_gene_discovery \
---patient_data my_data \
+--patient_data test_predict \
 --edgelist KG_edgelist_mask.txt \
 --node_map KG_node_map.txt \
 --saved_node_embeddings_path checkpoints/pretrain.ckpt \

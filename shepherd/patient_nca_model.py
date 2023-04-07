@@ -354,7 +354,6 @@ class CombinedPatientNCA(pl.LightningModule):
         if self.hparams.hparams['loss'] == 'patient_disease_NCA': labels = batch.disease_one_hot_labels
         else: labels = batch.patient_labels
         loss, softmax, labels, candidate_disease_idx, candidate_disease_embeddings = self.patient_model.calc_loss(batch, phenotype_embedding, disease_embeddings, disease_mask, labels, use_candidate_list)
-        print('labels', labels, labels.nelement())
         if labels.nelement() == 0:
             correct_ranks = None
         else:
