@@ -173,7 +173,7 @@ def add_reverse_edges(graph):
     return full_graph
 
 
-def generate_edgelist(node_map_f, mask_f, graph, triad_closure):
+def generate_edgelist(node_map_f, mask_f, graph, triad_closure, remove_go):
     
     print("Starting to process the KG table")
     nodes = get_node_df(graph)
@@ -194,6 +194,24 @@ def generate_edgelist(node_map_f, mask_f, graph, triad_closure):
     print("Starting to get reverse edges")
     full_graph = add_reverse_edges(full_graph)
     
+    if remove_go:
+        print("Removing GO terms")
+        before_filter = {k: v for k, v in Counter(full_graph["full_relation"].tolist()).items()}
+        filter_list = [
+                       "molecular_function;protein_molfunc;gene/protein", "gene/protein;protein_molfunc;molecular_function",
+                       "biological_process;protein_bioprocess;gene/protein", "gene/protein;protein_bioprocess;biological_process",
+                       "gene/protein;protein_cellcomp;cellular_component", "cellular_component;protein_cellcomp;gene/protein",
+                       #"molecular_function;molfunc_molfunc;molecular_function", "molecular_function;molfunc_molfunc_rev;molecular_function",
+                       #"biological_process;bioprocess_bioprocess;biological_process", "biological_process;bioprocess_bioprocess_rev;biological_process",
+                       #"cellular_component;cellcomp_cellcomp;cellular_component", "cellular_component;cellcomp_cellcomp_rev;cellular_component",
+                       ]
+        full_graph = full_graph.loc[~full_graph['full_relation'].isin(filter_list)]
+        
+        # Sanity check
+        for k, v in Counter(full_graph["full_relation"].tolist()).items():
+            if k in before_filter:
+                assert v == before_filter[k]
+
     print("Starting to save final dataframes")
     new_nodes = new_nodes.get(["new_node_idx", "node_id", "node_type", "node_name", "node_source"]).rename(columns={"new_node_idx": "node_idx"})
     new_nodes.to_csv(node_map_f, sep="\t", index=False)
@@ -208,12 +226,18 @@ def generate_edgelist(node_map_f, mask_f, graph, triad_closure):
 '''
 python prepare_graph.py \
 --triad_closure
+
+python prepare_graph.py \
+--triad_closure \
+--remove_go
 '''
 
 def main():
     parser = argparse.ArgumentParser(description="Prepare graph.")
     parser.add_argument('--triad_closure', action='store_true', \
         help='Whether to add edges between phenotypes & genes if edges exist between P-D and D-G')
+    parser.add_argument('--remove_go', action='store_true', \
+        help='Whether to remove Gene Ontology nodes/edges')
     args = parser.parse_args()
 
 
@@ -229,9 +253,13 @@ def main():
     print(graph)
 
     # Output
-    node_map_f = project_config.KG_DIR / f"KG_node_map.txt"
-    mask_f = project_config.KG_DIR / f"KG_edgelist_mask.txt" 
-    generate_edgelist(node_map_f, mask_f, graph, triad_closure=args.triad_closure)
+    if args.remove_go:
+        node_map_f = project_config.KG_DIR / f"KG_node_map_noGO.txt"
+        mask_f = project_config.KG_DIR / f"KG_edgelist_mask_noGO.txt" 
+    else:
+        node_map_f = project_config.KG_DIR / f"KG_node_map.txt"
+        mask_f = project_config.KG_DIR / f"KG_edgelist_mask.txt"     
+    generate_edgelist(node_map_f, mask_f, graph, triad_closure=args.triad_closure, remove_go=args.remove_go)
 
 
 if __name__ == "__main__":

@@ -7,7 +7,7 @@ import argparse
 sys.path.insert(0, '../..') # add config to path
 sys.path.insert(0, '..')
 import project_config
-from project_utils import read_patients, read_dicts
+from project_utils import read_patients, write_patients, read_dicts
 
 '''
 python add_spl_to_patients.py  \
@@ -49,6 +49,44 @@ def add_spl_info(patients, spl_matrix, hpo_to_idx_dict, ensembl_to_idx_dict , ni
 
     return avg_spl_matrix, spl_indexing
 
+"""
+python add_spl_to_patients.py \
+    --save_prefix mygene2_5.7.22_max250candgenes \
+    --only_test_data
+
+python add_spl_to_patients.py \
+    --save_prefix allsim_mygene2_5.7.22_max250candgenes \
+    --only_train_val_data
+    
+
+python add_spl_to_patients.py \
+    --save_prefix ddd_allsim_mygene2_5.7.22_max250candgenes \
+    --only_train_val_data
+    
+python add_spl_to_patients.py \
+    --save_prefix ddd_20candgenes \
+    --only_test_data
+    
+    
+python add_spl_to_patients.py \
+    --save_prefix ddd_scrapedddd_allsim_mygene2_5.7.22_max250candgenes \
+    --only_test_data
+    
+python add_spl_to_patients.py \
+    --save_prefix disease_split_allsim_patients_8.9.21_kg_phencorrupt \
+    --only_train_val_data
+
+python add_spl_to_patients.py \
+    --save_prefix disease_split_allsim_patients_8.9.21_kg_phencorrupt_combined \
+    --only_train_val_data \
+    --combine_corrupt
+
+python add_spl_to_patients.py \
+    --save_prefix all_simulated_ddd_mygene2_5.7.22_max20candgenes_phencorrupt \
+    --only_test_data
+ 
+"""
+
 def main():
     parser = argparse.ArgumentParser(description="Add SPL to patients.")
 
@@ -59,13 +97,15 @@ def main():
 
     parser.add_argument('--only_test_data', action='store_true', help='Only calculate SPL for the test data. You might want to do this if you have separate runs for many different test datasets and want to generate separate SPL for train/val & testing')
     parser.add_argument('--only_train_val_data', action='store_true', help='Only calculate SPL for the train/val data. You might want to do this if you have separate runs for many different test datasets and want to generate separate SPL for train/val & testing')
-
+    
+    #parser.add_argument('--combine_corrupt', action='store_true', help='Combine original and corrupt')
+    # --> Moved this code to "../combine_patient_cohorts.py"
     
     args = parser.parse_args()
     print('Aggregation type: ', args.agg_type)
     
     # change x_max to 9 for max, 6.5 for avg & min, or 7 for median. These values are based off simulated patient data
-    if args.agg_type == 'mean': x_max = 6.5
+    if args.agg_type == 'mean': x_max = 6.84 # 6 for mygene2, 6.5 for DDD, 6.833.. for corrupted phen simulated patients
     elif args.agg_type == 'max': x_max = 9
     elif args.agg_type == 'min': x_max = 6.5
     elif args.agg_type == 'median': x_max = 7
