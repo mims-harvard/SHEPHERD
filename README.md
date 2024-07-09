@@ -1,9 +1,10 @@
-# Deep learning for diagnosing patients with rare genetic diseases
+# Few shot learning for phenotype-driven diagnosis of patients with rare genetic diseases
 
 **Authors**:
 - [Emily Alsentzer](https://emilyalsentzer.com) (Equal contribution)
 - [Michelle M. Li](http://michellemli.com) (Equal contribution)
 - [Shilpa N. Kobren](http://shilpakobren.com)
+- [Ayush Noori](https://www.ayushnoori.com)
 - [Undiagnosed Diseases Network](https://undiagnosed.hms.harvard.edu)
 - [Isaac S. Kohane](http://zaklab.org)
 - [Marinka Zitnik](http://zitniklab.hms.harvard.edu)
@@ -212,10 +213,10 @@ To see and/or modify the default hyperparameters, please see the `get_predict_hp
 
 ```
 @article{shepherd,
-  title={Deep learning for diagnosing patients with rare genetic diseases},
-  author={Alsentzer, Emily and Li, Michelle M. and Kobren, Shilpa and Undiagnosed Diseases Network and Kohane, Isaac S. and Zitnik, Marinka},
+  title={Few shot learning for phenotype-driven diagnosis of patients with rare genetic diseases},
+  author={Alsentzer, Emily and Li, Michelle M. and Kobren, Shilpa and Noori, Ayush and Undiagnosed Diseases Network and Kohane, Isaac S. and Zitnik, Marinka},
   journal={medRxiv},
-  year={2022}
+  year={2024}
 }
 ```
 
