@@ -60,6 +60,7 @@ class NodeEmbeder(pl.LightningModule):
         self.output = self.hparams.hp_dict['output']
 
         self.node_emb = nn.Embedding(num_nodes, self.nfeat)
+        #self.node_emb = torch.normal(torch.zeros(num_nodes, self.nfeat), std = 1).to(device)
         
         self.num_nodes = num_nodes 
         self.num_relations = len(edge_attr_dict)
@@ -73,6 +74,7 @@ class NodeEmbeder(pl.LightningModule):
         elif self.decoder_type == "dot": self.decoder = dot
         
         self.n_layers = 3
+        #self.n_layers = 2
         
         self.loss_type = self.hparams.hp_dict['loss']
         self.combined_training = combined_training
@@ -80,8 +82,11 @@ class NodeEmbeder(pl.LightningModule):
         # Conv layers
         self.convs = torch.nn.ModuleList()
         self.convs.append(GATv2Conv(self.nfeat, self.nhid1, self.n_heads)) # input = nfeat, output = nhid1*n_heads
-        self.convs.append(GATv2Conv(self.nhid1*self.n_heads, self.nhid2, self.n_heads)) # input = nhid1*n_heads, output = nhid2*n_heads
-        self.convs.append(GATv2Conv(self.nhid2*self.n_heads, self.output, self.n_heads)) # input = nhid2*n_heads, output = output*n_heads
+        if self.n_layers == 3:
+            self.convs.append(GATv2Conv(self.nhid1*self.n_heads, self.nhid2, self.n_heads)) # input = nhid1*n_heads, output = nhid2*n_heads
+            self.convs.append(GATv2Conv(self.nhid2*self.n_heads, self.output, self.n_heads)) # input = nhid2*n_heads, output = output*n_heads
+        else:
+            self.convs.append(GATv2Conv(self.nhid1*self.n_heads, self.output, self.n_heads)) # input = nhid2*n_heads, output = output*n_heads
         
         # Relation learnable weights
         self.relation_weights = nn.Parameter(torch.Tensor(self.num_relations, self.output * self.n_heads))
@@ -98,10 +103,10 @@ class NodeEmbeder(pl.LightningModule):
         elif self.norm_method == "batch_layer":
             self.batch_norms = torch.nn.ModuleList()
             self.batch_norms.append(BatchNorm(self.nhid1*self.n_heads))
-            self.batch_norms.append(BatchNorm(self.nhid2*self.n_heads))
+            if self.n_layers == 3: self.batch_norms.append(BatchNorm(self.nhid2*self.n_heads))
             self.layer_norms = torch.nn.ModuleList()
             self.layer_norms.append(LayerNorm(self.nhid1*self.n_heads))
-            self.layer_norms.append(LayerNorm(self.nhid2*self.n_heads))
+            if self.n_layers == 3: self.layer_norms.append(LayerNorm(self.nhid2*self.n_heads))
 
         self.reset_parameters()
 
@@ -112,8 +117,10 @@ class NodeEmbeder(pl.LightningModule):
 
     def forward(self, n_ids, adjs): 
         x = self.node_emb(n_ids)
+        #x = self.node_emb[n_ids]
         
         gat_attn = []
+        assert len(adjs) == self.n_layers
         for i, (edge_index, _, edge_type, size) in enumerate(adjs):
             
             # Update node embeddings
@@ -373,7 +380,6 @@ class NodeEmbeder(pl.LightningModule):
             edge_i[0,:] = n_id[edge_i[0,:]]
             edge_i[1,:] = n_id[edge_i[1,:]]
             gat_attn.append((edge_i, alpha))
-
             
             # Normalize
             if i != self.n_layers - 1:
@@ -385,12 +391,14 @@ class NodeEmbeder(pl.LightningModule):
                 if self.norm_method == "batch_layer":
                     x = self.batch_norms[i](x)
                 #x = F.dropout(x, p=self.dropout, training=self.training)
-                
+        
+        assert x.shape[0] == self.node_emb.weight.shape[0]
+
         return x, gat_attn
 
     def predict_step(self, data, data_idx):
-        x = self.predict(data)
-        return x
+        x, gat_attn = self.predict(data)
+        return x, gat_attn
     
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay = self.wd)

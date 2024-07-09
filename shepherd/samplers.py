@@ -14,6 +14,7 @@ from typing import List, Optional, Tuple, NamedTuple, Union, Callable, Dict
 from collections import defaultdict
 import time
 import random
+import pickle
 from collections import Counter
 from operator import itemgetter
 import copy
@@ -21,6 +22,7 @@ import numpy as np
 from utils.pretrain_utils import get_indices_into_edge_index, HeterogeneousEdgeIndex 
 from sklearn.preprocessing import label_binarize
 
+import project_config
 
 
 class NeighborSampler(torch.utils.data.DataLoader):
@@ -252,6 +254,9 @@ class PatientNeighborSampler(torch.utils.data.DataLoader):
                  gp_spl = None,
                  spl_indexing_dict=None,
 
+                 gene_similarity_dict=None,
+                 gene_deg_dict = None,
+
                  hparams=None,
                  transform: Callable = None, 
                  **kwargs):
@@ -286,18 +291,27 @@ class PatientNeighborSampler(torch.utils.data.DataLoader):
         self.is_sparse_tensor = isinstance(edge_index, SparseTensor)
         self.__val__ = None
 
+        # For SPL
+        self.nid_to_spl_dict = nid_to_spl_dict 
+        if hparams["alpha"] < 1: self.gp_spl = gp_spl
+        else: self.gp_spl = None
+        self.spl_indexing_dict = spl_indexing_dict
+
         # Up-sample candidate genes
         self.upsample_cand = upsample_cand
         self.cand_gene_freq = Counter([])
+        #self.cand_gene_freq = Counter(list(self.patient_dataset.unique_genes)) # Upsample from the causal/candidate genes in patients
+        with open(str(project_config.KG_DIR  / f'ensembl_to_idx_dict_{project_config.CURR_KG}.pkl'), 'rb') as handle:
+            ensembl_to_idx_dict = pickle.load(handle) # create ensembl to node_idx map
+        idx_to_ensembl_dict = {v: k for k, v in ensembl_to_idx_dict.items()}
+        self.cand_gene_freq = Counter([k for k in nid_to_spl_dict if k in idx_to_ensembl_dict]) # Upsample from all gene nodes in the KG
+        
         self.n_cand_diseases = n_cand_diseases
         self.use_diseases = use_diseases
         self.hparams = hparams
 
-        # For SPL
-        self.nid_to_spl_dict = nid_to_spl_dict 
-        self.gp_spl = gp_spl
-        self.spl_indexing_dict = spl_indexing_dict
-
+        self.gene_similarity_dict = gene_similarity_dict
+        self.gene_deg_dict = gene_deg_dict
 
         # Obtain a *transposed* `SparseTensor` instance.
         if not self.is_sparse_tensor:
@@ -349,10 +363,13 @@ class PatientNeighborSampler(torch.utils.data.DataLoader):
 
         return edge_index[:, mask], e_id[mask]
 
-    def get_source_nodes(self, phenotype_node_idx, candidate_gene_node_idx, correct_genes_node_idx, disease_node_idx, candidate_disease_node_idx): 
+    def get_source_nodes(self, phenotype_node_idx, candidate_gene_node_idx, correct_genes_node_idx, disease_node_idx, candidate_disease_node_idx, sim_gene_node_idx): 
         
         # Get batch node indices based on patient phenotypes and genes
-        source_batch = torch.cat(phenotype_node_idx +  candidate_gene_node_idx +  correct_genes_node_idx + disease_node_idx + candidate_disease_node_idx)
+        if sim_gene_node_idx is not None:
+            source_batch = torch.cat(phenotype_node_idx +  candidate_gene_node_idx +  correct_genes_node_idx + disease_node_idx + candidate_disease_node_idx + sim_gene_node_idx)
+        else:
+            source_batch = torch.cat(phenotype_node_idx +  candidate_gene_node_idx +  correct_genes_node_idx + disease_node_idx + candidate_disease_node_idx)
 
          # Randomly sample nodes in KG 
         if self.sparse_sample > 0:
@@ -403,7 +420,7 @@ class PatientNeighborSampler(torch.utils.data.DataLoader):
             targets = random_walk(row, col, source_batch, walk_length=1, coalesced=False)[:, 1] #NOTE: only does self loops when no edges in the current partition of the dataset
         return source_batch, targets
 
-    def add_patient_information(self, patient_ids, phenotype_node_idx, candidate_gene_node_idx, correct_genes_node_idx, disease_node_idx, candidate_disease_node_idx, labels, disease_labels, patient_labels, additional_labels, adjs, batch_size, n_id, sparse_idx, target_batch): #candidate_disease_node_idx
+    def add_patient_information(self, patient_ids, phenotype_node_idx, candidate_gene_node_idx, correct_genes_node_idx, sim_gene_node_idx, gene_sims, gene_degs, disease_node_idx, candidate_disease_node_idx, labels, disease_labels, patient_labels, additional_labels, adjs, batch_size, n_id, sparse_idx, target_batch): #candidate_disease_node_idx
 
         # Create Data Object & Add patient level information
         adjs = [HeterogeneousEdgeIndex(adj.edge_index, adj.e_id, self.all_edge_attr[adj.e_id], adj.size) for adj in adjs] 
@@ -465,6 +482,8 @@ class PatientNeighborSampler(torch.utils.data.DataLoader):
         if self.use_diseases:
             disease_node_idx = [d + 1 for d in disease_node_idx]
             candidate_disease_node_idx = [d + 1 for d in candidate_disease_node_idx]
+        if 'augment_genes' in self.hparams and self.hparams['augment_genes']:
+            sim_gene_node_idx = [g + 1 for g in sim_gene_node_idx]
 
         # if there aren't any disease idx in the batch, we add filler
         if self.use_diseases:
@@ -481,6 +500,15 @@ class PatientNeighborSampler(torch.utils.data.DataLoader):
         if self.use_diseases:
             data['batch_disease_nid'] = pad_sequence(disease_node_idx, batch_first=True, padding_value=0) 
             data['batch_cand_disease_nid'] = pad_sequence(candidate_disease_node_idx, batch_first=True, padding_value=0) 
+        if 'augment_genes' in self.hparams and self.hparams['augment_genes']:
+            data['batch_cand_gene_degs'] = pad_sequence(gene_degs, batch_first=True, padding_value=0) 
+            data['batch_sim_gene_nid'] = pad_sequence(sim_gene_node_idx, batch_first=True, padding_value=0) 
+            data['batch_sim_gene_sims'] = pad_sequence(gene_sims, batch_first=True, padding_value=0)
+            # Normalize
+            data['batch_sim_gene_sims'] = data['batch_sim_gene_sims'] / torch.sum(data['batch_sim_gene_sims'], dim=1, keepdim=True)
+        else:
+            if len(candidate_gene_node_idx[0]) > 0:
+                data['batch_cand_gene_nid'] = pad_sequence(candidate_gene_node_idx, batch_first=True, padding_value=0) 
 
         # Convert KG node IDs to batch IDs
         # When performing inference (i.e., predict.py), use the original node IDs because the full KG is used in forward pass of node model
@@ -493,7 +521,8 @@ class PatientNeighborSampler(torch.utils.data.DataLoader):
             if self.use_diseases:
                 data['batch_disease_nid'] = torch.LongTensor(np.vectorize(node2batch.get)(data['batch_disease_nid']))
                 data['batch_cand_disease_nid'] = torch.LongTensor(np.vectorize(node2batch.get)(data['batch_cand_disease_nid']))
-
+            if 'augment_genes' in self.hparams and self.hparams['augment_genes']:
+                data['batch_sim_gene_nid'] = torch.LongTensor(np.vectorize(node2batch.get)(data['batch_sim_gene_nid']))
         return data
 
     def get_candidate_diseases(self, disease_node_idx, candidate_gene_node_idx):
@@ -552,6 +581,28 @@ class PatientNeighborSampler(torch.utils.data.DataLoader):
 
         adjs = [adjs[0]] if len(adjs) == 1 else adjs[::-1]
         return adjs, batch_size, n_id
+    
+    def get_similar_genes(self, patient_ids, candidate_gene_node_idx):
+        k = self.hparams['n_sim_genes']
+        gene_ids = []
+        sims = []
+        degs = []
+        assert len(patient_ids) == len(candidate_gene_node_idx)
+        for p, p_cand_genes in zip(patient_ids, candidate_gene_node_idx):
+            p_genes = []
+            p_sims = []
+            p_degs = []
+            for g in p_cand_genes:
+                p_genes.append(torch.LongTensor([idx for idx, sim in list(self.gene_similarity_dict[int(g)])[:k]]))
+                p_sims.append(torch.LongTensor([sim for idx, sim in list(self.gene_similarity_dict[int(g)])[:k]]))
+                p_degs.append(self.gene_deg_dict[int(g)])
+            gene_ids.append(torch.stack(p_genes))
+            sims.append(torch.stack(p_sims))
+            degs.append(torch.LongTensor(p_degs))
+        assert len(gene_ids) == len(patient_ids)
+        assert len(sims) == len(patient_ids)
+        unique_genes = torch.unique(torch.cat(gene_ids).flatten()).unsqueeze(-1)
+        return tuple(gene_ids), tuple(sims), tuple(degs), tuple(unique_genes)
 
     def collate(self, batch):
         t00 = time.time()
@@ -611,10 +662,15 @@ class PatientNeighborSampler(torch.utils.data.DataLoader):
             candidate_disease_node_idx = disease_node_idx
             disease_labels = torch.tensor([1] * len(candidate_disease_node_idx))
 
+        if self.hparams['augment_genes']:
+            sim_gene_node_idx, gene_sims, gene_degs, unique_sim_genes = self.get_similar_genes(patient_ids, candidate_gene_node_idx)
+        else:
+            unique_sim_genes = gene_degs = gene_sims = sim_gene_node_idx = None
+
         t1 = time.time()
 
         # get nodes from patients + randomly sampled nodes
-        source_batch, sparse_idx = self.get_source_nodes(phenotype_node_idx, candidate_gene_node_idx, correct_genes_node_idx, disease_node_idx, candidate_disease_node_idx)
+        source_batch, sparse_idx = self.get_source_nodes(phenotype_node_idx, candidate_gene_node_idx, correct_genes_node_idx, disease_node_idx, candidate_disease_node_idx, unique_sim_genes)
        
         # sample nodes to form positive edges
         source_batch, target_batch = self.sample_target_nodes(source_batch) 
@@ -626,7 +682,7 @@ class PatientNeighborSampler(torch.utils.data.DataLoader):
         t3 = time.time()
 
         # add patient information to data object
-        data = self.add_patient_information(patient_ids, phenotype_node_idx, candidate_gene_node_idx, correct_genes_node_idx, disease_node_idx, candidate_disease_node_idx, labels, disease_labels, patient_labels, additional_labels, adjs, batch_size, n_id, sparse_idx, target_batch) #candidate_disease_node_idx
+        data = self.add_patient_information(patient_ids, phenotype_node_idx, candidate_gene_node_idx, correct_genes_node_idx, sim_gene_node_idx, gene_sims, gene_degs, disease_node_idx, candidate_disease_node_idx, labels, disease_labels, patient_labels, additional_labels, adjs, batch_size, n_id, sparse_idx, target_batch) #candidate_disease_node_idx
         t4 = time.time()
         
         if self.hparams['time']:

@@ -95,6 +95,11 @@ class PatientDataset(Dataset):
         # map from patient id to index in dataset
         self.patient_id_to_index = {p['id']:i for i, p in enumerate(self.patients)}
 
+        #self.unique_genes = set()
+        #for p in self.patients:
+        #    self.unique_genes = self.unique_genes.union(set(p["true_genes"])).union(set(p["all_candidate_genes"]))
+        #print("Number of unique genes:", len(self.unique_genes))
+
         print('Finished initalizing dataset')
 
 
@@ -117,7 +122,7 @@ class PatientDataset(Dataset):
                 if label == "n_hops_cand_g_p": continue
                 if values == None: values = [[-1]]
                 if type(values) != list: values = [[values]] #  wrap in list if needed
-                if type(values) == list and type(values[0]) != list: values = [values]     
+                if type(values) == list and (len(values)==0 or type(values[0]) != list): values = [values]
                 additional_labels_dict[label] = values 
             if 'max_percent_phen_overlap_train' not in patient['additional_labels']: additional_labels_dict['max_percent_phen_overlap_train'] = [[-1]] 
             if 'max_phen_overlap_train' not in patient['additional_labels']: additional_labels_dict['max_phen_overlap_train'] = [[-1]]
@@ -183,7 +188,7 @@ class PatientDataset(Dataset):
         elif idx == 0:
             return 'padding'
         else:
-            print(idx)
+            print("Exception on:", idx)
             raise Exception
 
     def get_similar_patients(self, patient_id, similarity_type='gene'):

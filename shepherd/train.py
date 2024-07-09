@@ -60,6 +60,12 @@ def parse_args():
     parser.add_argument('--saved_node_embeddings_path', type=str, default=None, help='Path within kg_embeddings folder to the saved KG embeddings')
     parser.add_argument('--patient_data', default="disease_simulated", type=str)
     parser.add_argument('--run_type', choices=["causal_gene_discovery", "disease_characterization", "patients_like_me"], type=str)
+    parser.add_argument("--aug_sim", type=str, default=None, help="File with the similarity dictionary")
+    parser.add_argument("--aug_gene_by_deg", type=bool, default=False, help="Augment gene by degree")
+    parser.add_argument("--aug_gene_w", type=float, default=0.7, help="Contribution of augmentation (gene)")
+    parser.add_argument("--n_sim_genes", type=int, default=3, help="K similar genes for augmentation")
+    parser.add_argument("--n_transformer_layers", type=int, default=3, help="Number of transformer layers")
+    parser.add_argument("--n_transformer_heads", type=int, default=8, help="Number of transformer heads")
 
     # Tunable parameters
     parser.add_argument('--sparse_sample', default=200, type=int)
@@ -123,14 +129,28 @@ def get_dataloaders(hparams, all_data, nid_to_spl_dict, n_nodes, gene_phen_dis_n
         gene_counter=None
 
     print('Loading SPL...')
-    spl = np.load(project_config.PROJECT_DIR / 'patients' / hparams['spl'])  
-    if (project_config.PROJECT_DIR / 'patients' / hparams['spl_index']).exists():
+    if hparams['spl'] is not None:
+        spl = np.load(project_config.PROJECT_DIR / 'patients' / hparams['spl'])  
+    else: spl = None
+    if hparams['spl_index'] is not None and (project_config.PROJECT_DIR / 'patients' / hparams['spl_index']).exists():
         with open(str(project_config.PROJECT_DIR / 'patients' / hparams['spl_index']), "rb") as input_file:
             spl_indexing_dict = pickle.load(input_file)
     else: spl_indexing_dict=None # TODO: short term fix for simulated patients, get rid once we create this dict
     
     print('Loaded SPL information')
-    
+
+    #with open(str(project_config.PROJECT_DIR / 'knowledge_graph/8.9.21_kg' / 'top_10_similar_genes_sim=n_shared_phenotype_neighbors.pkl'), "rb") as input_file:
+    #with open(str(project_config.PROJECT_DIR / 'knowledge_graph/8.9.21_kg' / 'top_10_similar_genes_sim=n_shared_phenotype_neighbors_normalize_by_degree.pkl'), "rb") as input_file:
+    #with open(str(project_config.PROJECT_DIR / 'knowledge_graph/8.9.21_kg' / 'top_10_similar_genes_sim=n_shared_neighbors.pkl'), "rb") as input_file:
+    #with open(str(project_config.PROJECT_DIR / 'knowledge_graph/8.9.21_kg' / 'top_10_similar_genes_sim=n_shared_neighbors_normalize_by_degree.pkl'), "rb") as input_file:
+    if args.aug_sim is not None:
+        with open(str(project_config.PROJECT_DIR / 'knowledge_graph/8.9.21_kg' / ('top_10_similar_genes_sim=%s.pkl' % args.aug_sim)), "rb") as input_file:
+            gene_similarity_dict = pickle.load(input_file)
+        print("Using augment gene similarity: %s" % args.aug_sim)
+    else: gene_similarity_dict=None
+
+    with open("/home/ema30/zaklab/rare_disease_dx/formatted_patients/degree_dict_8.9.21_kg.pkl", "rb") as input_file:
+        gene_deg_dict = pickle.load(input_file)
 
     if inference:
         train_dataloader = None
@@ -143,28 +163,37 @@ def get_dataloaders(hparams, all_data, nid_to_spl_dict, n_nodes, gene_phen_dis_n
                         all_edge_attributes=all_data.edge_attr, n_nodes = n_nodes, relevant_node_idx=gene_phen_dis_node_idx,
                         shuffle = shuffle, train_phenotype_counter=phenotype_counter, train_gene_counter=gene_counter, sample_edges_from_train_patients=hparams['sample_edges_from_train_patients'], num_workers=hparams['num_workers'], 
                         upsample_cand=hparams['upsample_cand'], n_cand_diseases=hparams['n_cand_diseases'], use_diseases=hparams['use_diseases'], nid_to_spl_dict=nid_to_spl_dict, gp_spl=spl, spl_indexing_dict=spl_indexing_dict,
-                        hparams=hparams, pin_memory=hparams['pin_memory'])
+                        hparams=hparams, pin_memory=hparams['pin_memory'],
+                        gene_similarity_dict = gene_similarity_dict,
+                        gene_deg_dict = gene_deg_dict)
         print('finished setting up train dataloader')
         print('setting up val dataloader')
         val_dataloader = PatientNeighborSampler('val', all_data.edge_index, all_data.edge_index[:,all_data.val_mask], 
-                        sizes = [-1,10,5], patient_dataset=val_dataset, batch_size = batch_sz, 
+                        sizes = [-1,10,5], 
+                        #sizes = [-1,10],
+                        patient_dataset=val_dataset, batch_size = batch_sz, 
                         sparse_sample = sparse_sample, all_edge_attributes=all_data.edge_attr, n_nodes = n_nodes, 
                         relevant_node_idx=gene_phen_dis_node_idx, 
                         shuffle = False, train_phenotype_counter=phenotype_counter, train_gene_counter=gene_counter, sample_edges_from_train_patients=hparams['sample_edges_from_train_patients'], num_workers=hparams['num_workers'],
                         n_cand_diseases=hparams['n_cand_diseases'], use_diseases=hparams['use_diseases'], nid_to_spl_dict=nid_to_spl_dict, gp_spl=spl, spl_indexing_dict=spl_indexing_dict,
-                        hparams=hparams,  pin_memory=hparams['pin_memory'])
+                        hparams=hparams,  pin_memory=hparams['pin_memory'],
+                        gene_similarity_dict = gene_similarity_dict, 
+                        gene_deg_dict = gene_deg_dict)
         print('finished setting up val dataloader')
     
     print('setting up test dataloader')
     if inference:
         sizes = [-1,10,5]
+        #sizes = [-1,10]
         print('SIZES: ', sizes)
         test_dataloader = PatientNeighborSampler('test', all_data.edge_index, all_data.edge_index[:,all_data.test_mask], 
                         sizes = sizes, patient_dataset=test_dataset, batch_size = len(test_dataset), 
                         sparse_sample = sparse_sample, all_edge_attributes=all_data.edge_attr, n_nodes = n_nodes, relevant_node_idx=gene_phen_dis_node_idx,
                         shuffle = False, num_workers=hparams['num_workers'],
                         n_cand_diseases=hparams['test_n_cand_diseases'],  use_diseases=hparams['use_diseases'], nid_to_spl_dict=nid_to_spl_dict, gp_spl=spl, spl_indexing_dict=spl_indexing_dict,
-                        hparams=hparams, pin_memory=hparams['pin_memory']) 
+                        hparams=hparams, pin_memory=hparams['pin_memory'],
+                        gene_similarity_dict = gene_similarity_dict, 
+                        gene_deg_dict = gene_deg_dict) 
     else: test_dataloader = None
     print('finished setting up test dataloader')
     
@@ -230,7 +259,9 @@ def train(args, hparams):
         curr_time = datetime.now().strftime("%m_%d_%y:%H:%M:%S")
         lr = hparams['lr']   
         val_data = str(hparams['validation_data']).split('.txt')[0].replace('/', '.')
-        run_name = "{}_lr_{}_val_{}_losstype_{}".format(curr_time, lr, val_data, hparams['loss']).replace('patients', 'pats') 
+        #run_name = "{}_lr_{}_val_{}_losstype_{}".format(curr_time, lr, val_data, hparams['loss']).replace('patients', 'pats') 
+        run_name = "{}_val_{}".format(curr_time, val_data).replace('patients', 'pats') 
+        run_name = run_name + f'_seed={args.seed}'
         run_name = run_name.replace('5_candidates_mapped_only', '5cand_map').replace('8.9.21_kgsolved_manual_baylor_nobgm_distractor_genes', 'manual').replace('patient_disease_NCA', 'pd_NCA').replace('_distractor', '')
         wandb_logger = WandbLogger(name=run_name, project=hparams['wandb_project_name'], entity='rare_disease_dx', save_dir=hparams['wandb_save_dir'],
                         id="_".join(run_name.split(":")), resume="allow") 
@@ -262,7 +293,7 @@ def train(args, hparams):
         monitor=monitor_type,
         dirpath=checkpoint_path,
         filename=fname,
-        save_top_k=2,
+        save_top_k=-1,
         mode='max',
         auto_insert_metric_name = False
     )
@@ -334,9 +365,8 @@ def inference(args, hparams):
 
     trainer = pl.Trainer(gpus=0, logger=wandb_logger)
     results = trainer.test(model, dataloaders=test_dataloader)
-    print('---- RESULTS ----')
     print(results)
-
+    print('---- RESULTS ----')
 
 
 if __name__ == "__main__":

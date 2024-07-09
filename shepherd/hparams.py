@@ -32,6 +32,7 @@ def get_pretrain_hparams(args, combined=False):
                'batch_size': 512,
                'inference_batch_size': 64,
                'neighbor_sampler_sizes': [15, 10, 5],
+               #'neighbor_sampler_sizes': [15, 10],
                'max_epochs': 200,
                'gradclip': 1.0,
                'lr_factor': 0.01,
@@ -72,11 +73,20 @@ def get_train_hparams(args):
                'lr': args.lr,
                'upsample_cand': args.upsample_cand, 
                'neighbor_sampler_sizes': [args.neighbor_sampler_size, 10, 5],
+               #'neighbor_sampler_sizes': [args.neighbor_sampler_size, 10],
                'lambda': args.lmbda, # Contribution of two loss functions
                'alpha': args.alpha, # Contribution of GP gate. NOTE: This is not used for patients-like-me or novel disease characterization
                'kappa': (1 - args.lmbda) * args.kappa,
                'seed': args.seed,
                'batch_size': args.batch_size,
+               
+               'augment_genes': True if args.aug_gene_w > 0 else False,
+               'n_sim_genes': args.n_sim_genes,
+               'aug_gene_w': args.aug_gene_w,
+               'aug_gene_by_deg': args.aug_gene_by_deg,
+
+               'n_transformer_layers': args.n_transformer_layers,
+               'n_transformer_heads': args.n_transformer_heads,
                
                # Fixed parameters
                'pos_weight': 1,
@@ -172,10 +182,49 @@ def get_run_type_args(args, hparams):
 def get_patient_data_args(args, hparams):
     if args.patient_data == "disease_simulated":
         hparams.update({'train_data': f'simulated_patients/disease_split_train_sim_patients_{project_config.CURR_KG}.txt',
+                        #'train_data': f'simulated_patients/disease_split_all_sim_patients_{project_config.CURR_KG}.txt',
                         'validation_data': f'simulated_patients/disease_split_val_sim_patients_{project_config.CURR_KG}.txt', 
-                        'test_data': f'simulated_patients/disease_split_val_sim_patients_{project_config.CURR_KG}.txt',
+                        #'validation_data': f'simulated_patients/disease_split_all_sim_patients_{project_config.CURR_KG}.txt', 
+                        #'validation_data': f'mygene2_patients/mygene2_5.7.22_max250candgenes.txt',
+                        'test_data': f'simulated_patients/disease_split_all_sim_patients_{project_config.CURR_KG}.txt',
                         'spl': f'simulated_patients/disease_split_all_sim_patients_{project_config.CURR_KG}_spl_matrix.npy',
                         'spl_index': f'simulated_patients/disease_split_all_sim_patients_{project_config.CURR_KG}_spl_index_dict.pkl'
+                        })
+    elif args.patient_data == "dis_sim_corrupt":
+        hparams.update({'train_data': f'simulated_patients/disease_split_train_sim_patients_{project_config.CURR_KG}_phencorrupt_combined.txt',
+                        'validation_data': f'simulated_patients/disease_split_val_sim_patients_{project_config.CURR_KG}_phencorrupt_combined.txt', 
+                        'test_data': f'simulated_patients/disease_split_all_sim_patients_{project_config.CURR_KG}_phencorrupt_combined.txt',
+                        'spl': f'simulated_patients/disease_split_all_sim_patients_{project_config.CURR_KG}_phencorrupt_combined_agg=mean_spl_matrix.npy',
+                        'spl_index': f'simulated_patients/disease_split_all_sim_patients_{project_config.CURR_KG}_phencorrupt_combined_spl_index_dict.pkl'
+                        })
+                        
+    elif args.patient_data == "disease_simulated_perc25":
+        hparams.update({'train_data': f'simulated_patients/disease_split_train_sim_patients_perc=0.25_seed=1.txt',
+                        'validation_data': f'simulated_patients/disease_split_val_sim_patients_{project_config.CURR_KG}.txt', 
+                        'test_data': f'simulated_patients/disease_split_all_sim_patients_{project_config.CURR_KG}.txt',
+                        'spl': f'simulated_patients/disease_split_all_sim_patients_{project_config.CURR_KG}_spl_matrix.npy',
+                        'spl_index': f'simulated_patients/disease_split_all_sim_patients_{project_config.CURR_KG}_spl_index_dict.pkl'
+                        })
+    elif args.patient_data == "disease_simulated_perc50":
+        hparams.update({'train_data': f'simulated_patients/disease_split_train_sim_patients_perc=0.50_seed=1.txt',
+                        'validation_data': f'simulated_patients/disease_split_val_sim_patients_{project_config.CURR_KG}.txt', 
+                        'test_data': f'simulated_patients/disease_split_all_sim_patients_{project_config.CURR_KG}.txt',
+                        'spl': f'simulated_patients/disease_split_all_sim_patients_{project_config.CURR_KG}_spl_matrix.npy',
+                        'spl_index': f'simulated_patients/disease_split_all_sim_patients_{project_config.CURR_KG}_spl_index_dict.pkl'
+                        })
+    elif args.patient_data == "disease_simulated_perc75":
+        hparams.update({'train_data': f'simulated_patients/disease_split_train_sim_patients_perc=0.75_seed=1.txt',
+                        'validation_data': f'simulated_patients/disease_split_val_sim_patients_{project_config.CURR_KG}.txt', 
+                        'test_data': f'simulated_patients/disease_split_all_sim_patients_{project_config.CURR_KG}.txt',
+                        'spl': f'simulated_patients/disease_split_all_sim_patients_{project_config.CURR_KG}_spl_matrix.npy',
+                        'spl_index': f'simulated_patients/disease_split_all_sim_patients_{project_config.CURR_KG}_spl_index_dict.pkl'
+                        })
+
+    elif args.patient_data == "allsim_ddd_mygene2_corrupt":
+        hparams.update({'train_data': f'simulated_patients/all_simulated_ddd_mygene2_5.7.22_max20candgenes_phencorrupt.txt',
+                        'validation_data': f'simulated_patients/all_simulated_ddd_mygene2_5.7.22_max20candgenes_phencorrupt.txt', 
+                        'spl': f'simulated_patients/all_simulated_ddd_mygene2_5.7.22_max20candgenes_phencorrupt_agg=mean_spl_matrix.npy',
+                        'spl_index': f'simulated_patients/all_simulated_ddd_mygene2_5.7.22_max20candgenes_phencorrupt_spl_index_dict.pkl'
                         })
     elif args.patient_data == "test_predict":
         hparams.update({
@@ -195,6 +244,62 @@ def get_patient_data_args(args, hparams):
                         'test_data': project_config.MY_TEST_DATA,
                         'spl': project_config.MY_SPL_DATA, # Result of add_spl_to_patients.py (suffix: _spl_matrix.npy)
                         'spl_index': project_config.MY_SPL_INDEX_DATA, # Result of add_spl_to_patients.py (suffix: _spl_index_dict.pkl)
+                        })
+    elif args.patient_data == 'sim_mygene2_in_train':
+          hparams.update({
+                        'train_data': f'mygene2_patients/train_simulated_and_mygene2_5.7.22_max20candgenes.txt',                     
+                        'validation_data': f'simulated_patients/disease_split_val_sim_patients_{project_config.CURR_KG}.txt', 
+                        'spl':  f'simulated_patients/allsim_mygene2_5.7.22_max250candgenes_agg=mean_spl_matrix.npy',
+                        'spl_index': 'simulated_patients/allsim_mygene2_5.7.22_max250candgenes_spl_index_dict.pkl'
+                        })
+    elif args.patient_data == 'sim_ddd_mygene2_in_train':
+          hparams.update({
+                        'train_data': f'mygene2_patients/train_simulated_ddd_mygene2_5.7.22_max20candgenes.txt',                     
+                        'validation_data': f'simulated_patients/disease_split_val_sim_patients_{project_config.CURR_KG}.txt', 
+                        'spl':  f'simulated_patients/ddd_allsim_mygene2_5.7.22_20candgenes_agg=mean_spl_matrix.npy',
+                        'spl_index': 'simulated_patients/ddd_allsim_mygene2_5.7.22_20candgenes_spl_index_dict.pkl'
+                        })
+    elif args.patient_data == 'all_sim_mygene2_in_train':
+          hparams.update({
+                        'train_data': f'mygene2_patients/all_simulated_and_mygene2_5.7.22_max20candgenes.txt',                     
+                        'validation_data': f'simulated_patients/disease_split_val_sim_patients_{project_config.CURR_KG}.txt', 
+                        'spl':  f'simulated_patients/allsim_mygene2_5.7.22_max250candgenes_agg=mean_spl_matrix.npy',
+                        'spl_index': 'simulated_patients/allsim_mygene2_5.7.22_max250candgenes_spl_index_dict.pkl'
+                        })
+    elif args.patient_data == 'all_sim_ddd_mygene2_in_train':
+          hparams.update({
+                        'train_data': f'mygene2_patients/all_simulated_ddd_mygene2_5.7.22_max20candgenes.txt',                     
+                        'validation_data': f'simulated_patients/disease_split_val_sim_patients_{project_config.CURR_KG}.txt', 
+                        'spl':  f'simulated_patients/ddd_allsim_mygene2_5.7.22_20candgenes_agg=mean_spl_matrix.npy',
+                        'spl_index': 'simulated_patients/ddd_allsim_mygene2_5.7.22_20candgenes_spl_index_dict.pkl'
+                        })
+    elif args.patient_data == 'ddd_mygene2':
+          hparams.update({
+                        'train_data': f'mygene2_patients/ddd_mygene2_5.7.22_max20candgenes.txt',                     
+                        'validation_data': f'simulated_patients/disease_split_val_sim_patients_{project_config.CURR_KG}.txt', 
+                        'spl':  f'simulated_patients/ddd_allsim_mygene2_5.7.22_20candgenes_agg=mean_spl_matrix.npy',
+                        'spl_index': 'simulated_patients/ddd_allsim_mygene2_5.7.22_20candgenes_spl_index_dict.pkl'
+                        })
+    elif args.patient_data == 'train_sim_ddd_mygene2':
+          hparams.update({
+                        'train_data': f'mygene2_patients/train_simulated_ddd_mygene2_5.7.22_max20candgenes.txt',                     
+                        'validation_data': f'simulated_patients/disease_split_val_sim_patients_{project_config.CURR_KG}.txt', 
+                        'spl':  f'simulated_patients/ddd_allsim_mygene2_5.7.22_20candgenes_agg=mean_spl_matrix.npy',
+                        'spl_index': 'simulated_patients/ddd_allsim_mygene2_5.7.22_20candgenes_spl_index_dict.pkl'
+                        })
+    elif args.patient_data == 'all_sim_ddd_scrapedddd_mygene2_in_train':
+          hparams.update({
+                        'train_data': f'mygene2_patients/all_simulated_ddd_scrapedddd_mygene2_5.7.22_max20candgenes.txt',                     
+                        'validation_data': f'simulated_patients/disease_split_val_sim_patients_{project_config.CURR_KG}.txt', 
+                        'spl': f'simulated_patients/ddd_scrapedddd_allsim_mygene2_5.7.22_20candgenes_agg=mean_spl_matrix.npy',
+                        'spl_index': 'simulated_patients/ddd_scrapedddd_allsim_mygene2_5.7.22_20candgenes_spl_index_dict.pkl'
+                        })
+    elif args.patient_data == 'sim_ddd_scrapedddd_mygene2_in_train':
+          hparams.update({
+                        'train_data': f'mygene2_patients/train_simulated_ddd_scrapedddd_mygene2_5.7.22_max20candgenes.txt',                     
+                        'validation_data': f'simulated_patients/disease_split_val_sim_patients_{project_config.CURR_KG}.txt', 
+                        'spl':  f'simulated_patients/ddd_scrapedddd_allsim_mygene2_5.7.22_20candgenes_agg=mean_spl_matrix.npy',
+                        'spl_index': 'simulated_patients/ddd_scrapedddd_allsim_mygene2_5.7.22_20candgenes_spl_index_dict.pkl'
                         })
     else:
         raise Exception('You must specify patient data.')
@@ -219,6 +324,11 @@ def get_predict_hparams(args):
                'time': False,
                'log_gpu_memory': False,
                'debug': False,
+
+               'augment_genes': True,
+               'n_sim_genes': 3,
+               'aug_gene_w': 0.5,
+
                'wandb_save_dir' : project_config.PROJECT_DIR / 'wandb',
                'saved_checkpoint_path': project_config.PROJECT_DIR  / f'{args.saved_node_embeddings_path}',
                'test_n_cand_diseases': -1, 

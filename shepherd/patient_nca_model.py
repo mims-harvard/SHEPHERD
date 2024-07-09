@@ -210,10 +210,13 @@ class CombinedPatientNCA(pl.LightningModule):
     def write_results_to_file(self, batch, softmax, correct_ranks, labels, phenotype_mask, disease_mask, attn_weights,  gat_attn, node_embeddings, phenotype_embeddings, disease_embeddings, save=True, loop_type='predict'):
         
         if save:
-            if self.hparams.hparams['loss'] == 'patient_disease_NCA': task = 'disease_characterization'
-            else: task = 'patients_like_me'
-            run_folder = Path(project_config.PROJECT_DIR) / 'results' / task / self.hparams.hparams['run_name'] / (Path(self.predict_dataloader.dataloader.dataset.filepath).stem ) #.replce('/', '_')
+            # if self.hparams.hparams['loss'] == 'patient_disease_NCA': task = 'disease_characterization'
+            # else: task = 'patient_NCA'
+            run_folder = Path(project_config.PROJECT_DIR) / 'checkpoints' / 'patient_NCA' / self.hparams.hparams['run_name'] / (Path(self.test_dataloader.dataloader.dataset.filepath).stem ) #.replce('/', '_')
+
+            # run_folder = Path(project_config.PROJECT_DIR) / 'results' / task / self.hparams.hparams['run_name'] / (Path(self.test_dataloader.dataloader.dataset.filepath).stem ) #.replce('/', '_')
             run_folder.mkdir(parents=True, exist_ok=True)
+            print('run_folder', run_folder)
         
      
         # Save scores
@@ -390,7 +393,13 @@ class CombinedPatientNCA(pl.LightningModule):
                 cand_disease_batch_nid = torch.cat([x[f'{loop_type}/batch_cand_disease_nid'] for x in outputs], dim=0)
             else: cand_disease_batch_nid = None
 
-            ranks_df, results_df, phen_df, attn_dfs, phenotype_embeddings, disease_embeddings = self.write_results_to_file(batch_info, softmax, correct_ranks_with_pad, labels, phenotype_mask, disease_mask, attn_weights, gat_attn, node_embeddings, phenotype_embedding, disease_embeddings, save=True, loop_type='test')
+            results_df, phen_df, attn_dfs, phenotype_embeddings, disease_embeddings = self.write_results_to_file(batch_info, softmax, correct_ranks_with_pad, labels, phenotype_mask, disease_mask, attn_weights, gat_attn, node_embeddings, phenotype_embedding, disease_embeddings, save=True, loop_type='test')
+
+            print("Writing results for test...")
+            output_base = "/home/ml499/public_repos/SHEPHERD/shepherd/results/patients_like_me"
+            results_df.to_csv(str(output_base) + '_scores.csv', index=False)
+            print(results_df)
+
 
         if self.hparams.hparams['plot_patient_embed']:
             phenotype_embedding = torch.cat([x[f'{loop_type}/patient.phenotype_embed'] for x in outputs], dim=0)
