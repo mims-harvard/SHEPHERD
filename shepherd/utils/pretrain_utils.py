@@ -87,6 +87,11 @@ def get_indices_into_edge_index(edge_index, source_nodes, target_nodes):
         target_node_mask = (edge_index[1,:] == target_nodes.unsqueeze(-1)).nonzero()
     
     vals_pos, counts_pos = torch.unique(torch.cat([source_node_mask, target_node_mask]), return_counts=True, dim=0)
+    if len(vals_pos) == 0 or len(counts_pos) == 0:
+        print(edge_index)
+        print(source_nodes)
+        print(target_nodes)
+    
     return vals_pos[counts_pos > 1][:,1], vals_pos[counts_pos > 1][:,0]
 
 
