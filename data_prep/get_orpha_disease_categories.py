@@ -61,11 +61,9 @@ def get_annotations(node, all_children):
         return all_children
     else:
         for node2 in node.find('ClassificationNodeChildList'):
-            #print('Node2', list(node2))
             disorder = node2.find('Disorder').find('Name').text
             disorder_id = node2.find('Disorder').find('OrphaCode').text #node2.find('Disorder').attrib['id']
             disorder_type = node2.find('Disorder').find('DisorderType').find('Name').text
-            #print(f'Disorder {disorder} with ID {disorder_id} of Type {disorder_type}'  )
             all_children.add((disorder, disorder_id, disorder_type))
 
             children = get_annotations(node2, all_children)

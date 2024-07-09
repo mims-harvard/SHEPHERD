@@ -68,7 +68,6 @@ def split_edges(edges): # Generate data splits
     mask[test_idx] = 2
     
     edges["mask"] = pd.Series(mask).map({0: "train", 1: "val", 2: "test"})
-    #print(edges)
     print("Finished train/val/test split")
     return edges
 

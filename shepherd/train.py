@@ -139,10 +139,6 @@ def get_dataloaders(hparams, all_data, nid_to_spl_dict, n_nodes, gene_phen_dis_n
     
     print('Loaded SPL information')
 
-    #with open(str(project_config.PROJECT_DIR / 'knowledge_graph/8.9.21_kg' / 'top_10_similar_genes_sim=n_shared_phenotype_neighbors.pkl'), "rb") as input_file:
-    #with open(str(project_config.PROJECT_DIR / 'knowledge_graph/8.9.21_kg' / 'top_10_similar_genes_sim=n_shared_phenotype_neighbors_normalize_by_degree.pkl'), "rb") as input_file:
-    #with open(str(project_config.PROJECT_DIR / 'knowledge_graph/8.9.21_kg' / 'top_10_similar_genes_sim=n_shared_neighbors.pkl'), "rb") as input_file:
-    #with open(str(project_config.PROJECT_DIR / 'knowledge_graph/8.9.21_kg' / 'top_10_similar_genes_sim=n_shared_neighbors_normalize_by_degree.pkl'), "rb") as input_file:
     if args.aug_sim is not None:
         with open(str(project_config.PROJECT_DIR / 'knowledge_graph/8.9.21_kg' / ('top_10_similar_genes_sim=%s.pkl' % args.aug_sim)), "rb") as input_file:
             gene_similarity_dict = pickle.load(input_file)
@@ -170,7 +166,6 @@ def get_dataloaders(hparams, all_data, nid_to_spl_dict, n_nodes, gene_phen_dis_n
         print('setting up val dataloader')
         val_dataloader = PatientNeighborSampler('val', all_data.edge_index, all_data.edge_index[:,all_data.val_mask], 
                         sizes = [-1,10,5], 
-                        #sizes = [-1,10],
                         patient_dataset=val_dataset, batch_size = batch_sz, 
                         sparse_sample = sparse_sample, all_edge_attributes=all_data.edge_attr, n_nodes = n_nodes, 
                         relevant_node_idx=gene_phen_dis_node_idx, 
@@ -184,7 +179,6 @@ def get_dataloaders(hparams, all_data, nid_to_spl_dict, n_nodes, gene_phen_dis_n
     print('setting up test dataloader')
     if inference:
         sizes = [-1,10,5]
-        #sizes = [-1,10]
         print('SIZES: ', sizes)
         test_dataloader = PatientNeighborSampler('test', all_data.edge_index, all_data.edge_index[:,all_data.test_mask], 
                         sizes = sizes, patient_dataset=test_dataset, batch_size = len(test_dataset), 
@@ -259,7 +253,6 @@ def train(args, hparams):
         curr_time = datetime.now().strftime("%m_%d_%y:%H:%M:%S")
         lr = hparams['lr']   
         val_data = str(hparams['validation_data']).split('.txt')[0].replace('/', '.')
-        #run_name = "{}_lr_{}_val_{}_losstype_{}".format(curr_time, lr, val_data, hparams['loss']).replace('patients', 'pats') 
         run_name = "{}_val_{}".format(curr_time, val_data).replace('patients', 'pats') 
         run_name = run_name + f'_seed={args.seed}'
         run_name = run_name.replace('5_candidates_mapped_only', '5cand_map').replace('8.9.21_kgsolved_manual_baylor_nobgm_distractor_genes', 'manual').replace('patient_disease_NCA', 'pd_NCA').replace('_distractor', '')

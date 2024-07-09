@@ -103,11 +103,6 @@ class Preprocessor():
             self.ensembl_biomart_mapping['NCBI gene ID'] = self.ensembl_biomart_mapping['NCBI gene ID'].astype(str)
             self.ensembl_biomart_mapping.to_csv(config.BIOMART_PATH / 'combined_ensembl_biomart.txt', sep='\t', index=False)
 
-            # entrez -> ensembl mapping from biomart
-            # biomart_mapping_no_null = self.ensembl_biomart_mapping.loc[~pd.isnull(self.ensembl_biomart_mapping['NCBI gene ID'])]
-            # self.entrez_to_ensembl_dict = {entrez:ensembl for entrez, ensembl in  zip(biomart_mapping_no_null['NCBI gene ID'], biomart_mapping_no_null['Gene stable ID'])}   
-            # self.write_pkl(self.entrez_to_ensembl_dict, 'entrez_to_ensembl_dict.pkl')
-
     def read_ncbi_mappings(self):
         self.gene2ensembl = pd.read_csv(config.NCBI_PATH / 'gene2ensembl', sep='\t', dtype='str')
 
@@ -501,23 +496,14 @@ class Preprocessor():
 
     def map_genes(self, df, col_names, log=True, n_processes=4):
         genes_to_map = list(set([g for col_name in col_names for g in df[col_name].tolist()]))
-        #genes_to_map = genes_to_map[0:100] #TODO: delete - just for testing
-        #t0 = time.time()
+
         gene_to_ensembl_map = {}
         gene_to_status_map = {}
         for g in genes_to_map:
             ensembl_id, mapped_status = self.map_gene_to_ensembl_id(g, log=log)
             gene_to_ensembl_map[g] = ensembl_id
             gene_to_status_map[g] = mapped_status
-        #gene_to_ensembl_map = {g:self.map_gene_to_ensembl_id(g, log=log)[0] for g in genes_to_map}
-        #t1 = time.time()
-        # with Pool(processes=n_processes) as pool: 
-        #     ensembl_id, mapped_status = pool.map(self.map_gene_to_ensembl_id, genes_to_map)
-        #vectorized_map_to_ensembl_id = np.vectorize(self.map_gene_to_ensembl_id)
-        #ensembl_id, mapped_status = vectorized_map_to_ensembl_id(genes_to_map)
-        #t2 = time.time()
-        #print(f'It took {t1-t0:04f}s to do a for loop and {t2-t1:0.4f}s to vectorize.')
-        
+
         for col_name in col_names:
             df[(col_name + '_ensembl')] = df[col_name].replace(gene_to_ensembl_map)
             df[(col_name + '_mapping_status')] = df[col_name].replace(gene_to_status_map)

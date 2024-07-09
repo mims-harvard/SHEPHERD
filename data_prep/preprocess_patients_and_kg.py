@@ -210,7 +210,6 @@ def create_mondo_to_node_idx_dict(node_df, mondo_to_hpo_dict):
 
     #TODO: this dict is missing some names from phenotype diseases. This needs to be fixed.
     mondo_to_name_dict = {mondo_str:name for mondo, name in zip(disease_nodes['node_id'].tolist(), disease_nodes['node_name'].tolist()) for mondo_str in mondo.split('_')}
-    #phen_to_idx_dict = {int(phen):idx for phen, idx in zip(phenotype_nodes['node_id'].tolist(), phenotype_nodes['node_name'].tolist()) if int(phen) in mondo_to_hpo_dict.values()}
 
     # save to file
     with open(MONDO_TO_NAME_DICT_FILE, 'wb') as handle:
@@ -227,7 +226,6 @@ def map_diseases_to_orphanet(node_df, mondo_orphanet_map):
             mondo_ids = node_id.split('_')
             orphanet_ids = [mondo_orphanet_map[m] for m in mondo_ids if m in mondo_orphanet_map]
             orphanet_ids = [str(o) for l in orphanet_ids for o in l]
-            #if len(orphanet_ids) > 0: print(mondo_ids, '_'.join(orphanet_ids))
             if len(orphanet_ids) == 0: all_orphanet_ids.append(None)
             else: all_orphanet_ids.append('_'.join(orphanet_ids)) #NOTE: some nodes that contain grouped MONDO ids are mapped to multiple orphanet ids
     node_df['orphanet_node_id'] = pd.Series(all_orphanet_ids)

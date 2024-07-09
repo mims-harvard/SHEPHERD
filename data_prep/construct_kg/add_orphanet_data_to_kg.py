@@ -112,9 +112,7 @@ def find_missing_disease_gene_edges(orpha_disease_gene_edges, kg, kg_nodes, orph
     ## get edges from KG
     gene_disease_edges = kg.loc[(kg['x_type'] == 'gene/protein') & (kg['y_type'] == 'disease')]
     disease_gene_edges = kg.loc[(kg['x_type'] == 'disease') & (kg['y_type'] == 'gene/protein')] # reverse relations
-    #all_gene_disease_edges = pd.concat([gene_disease_edges, disease_gene_edges])
     assert len(gene_disease_edges.index) == 0
-    #print(len(gene_disease_edges.index), len(disease_gene_edges.index))
     kg_gene_disease_edges_tup = list(zip(disease_gene_edges['y_id'], disease_gene_edges['x_name']))
     kg_gene_disease_edges_tup = [(d,g) for d_list, g in kg_gene_disease_edges_tup for d in d_list.split('_')]
 
@@ -273,13 +271,10 @@ def main():
 
     # identify which orphanet genes, phenotypes, diseases are missing from the KG
     orphanet_genes_missing_in_kg , genes_in_kg = find_missing_genes(kg_raw_nodes, orpha_gene_symbols)
-    #kg_raw_nodes_ensembl = map_to_ensembl(kg_raw_nodes)     #map KG genes to ensembl IDs
-    #orphanet_genes_missing_in_kg_ensembl = find_missing_genes(kg_raw_nodes_ensembl, orpha_ensembl_ids, use_ensembl=True)
     orphanet_phenotypes_missing_in_kg, phenotype_nodes = find_missing_phenotypes(kg_raw_nodes, orpha_phenotypes)
     diseases_missing_in_kg, orphanet_diseases_not_mapped_to_mondo, missing_disease_df, diseases_in_kg = find_missing_diseases(kg_raw_nodes, orpha_diseases, orphanet_to_mondo_dict, mondo_definitions_obo_map, mondo_to_hpo_dict, phenotype_nodes)
     
     print('\nmissing genes: ', orphanet_genes_missing_in_kg)
-    #print('missing ensembl genes: ', orphanet_genes_missing_in_kg_ensembl)
     print('missing diseases', diseases_missing_in_kg)
     print('diseases that don\'t map to MONDO: ', orphanet_diseases_not_mapped_to_mondo, '\n')
     print('missing phenotypes', orphanet_phenotypes_missing_in_kg, '\n')

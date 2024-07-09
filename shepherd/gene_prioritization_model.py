@@ -46,7 +46,6 @@ class CombinedGPAligner(pl.LightningModule):
         self.train_target_batch = {}
         self.train_corr_gene_nid = {}
 
-        #print(f"Loading Node Embedder from {self.hparams.hparams['saved_checkpoint_path']}")
         print(f"Loading Node Embedder from {node_ckpt}")
 
         # NOTE: loads in saved hyperparameters
@@ -87,11 +86,7 @@ class CombinedGPAligner(pl.LightningModule):
             print("Augmenting genes...", self.hparams.hparams['aug_gene_w'])
             _, max_n_sim_cand_genes, k_sim_genes = batch.batch_sim_gene_nid.shape
             sim_gene_embeddings = torch.index_select(pad_outputs, 0, batch.batch_sim_gene_nid.view(-1)).view(batch_sz, max_n_sim_cand_genes, self.hparams.hparams['n_sim_genes'], -1)
-            #gene_similarities = batch.batch_sim_gene_sims / torch.sum(batch.batch_sim_gene_sims, dim=1, keepdim=True)
-            #agg_sim_gene_embedding = weighted_sum(sim_gene_embeddings, gene_similarities)            
-            #cand_gene_embeddings = (1 - self.hparams.hparams['aug_gene_w']) * cand_gene_embeddings + self.hparams.hparams['aug_gene_w'] * agg_sim_gene_embedding
             agg_sim_gene_embedding = weighted_sum(sim_gene_embeddings, batch.batch_sim_gene_sims)
-            #aug_gene_w = (self.hparams.hparams['aug_gene_w'] * (torch.sum(batch.batch_sim_gene_sims, dim = -1) > 0)).unsqueeze(-1)
             if self.hparams.hparams['aug_gene_by_deg']:
                 print("Augmenting gene by degree...")
                 aug_gene_w = self.hparams.hparams['aug_gene_w'] * torch.exp(-self.hparams.hparams['aug_gene_w'] * batch.batch_cand_gene_degs) + (1 - self.hparams.hparams['aug_gene_w'] - 0.1)
@@ -153,7 +148,6 @@ class CombinedGPAligner(pl.LightningModule):
         t3 = time.time()
 
         ## Calculate patient embedding loss
-        #batch_sz, n_candidates = batch.batch_cand_gene_nid.shape
         loss = self.patient_model.calc_loss(sims, mask, one_hot_labels)
         t4 = time.time()
 
@@ -195,7 +189,6 @@ class CombinedGPAligner(pl.LightningModule):
         batch_sz, n_candidates, embed_dim = candidate_gene_embeddings.shape
         candidate_gene_embeddings_flattened = candidate_gene_embeddings.view(batch_sz*n_candidates, embed_dim)
         one_hot_labels_flattened = batch.one_hot_labels.view(batch_sz*n_candidates)
-        #cand_gene_nid_flattened = batch.batch_cand_gene_nid.view(batch_sz*n_candidates)
 
         return {'loss': loss, 
                 'train/train_correct_gene_ranks': correct_gene_ranks, 
@@ -222,7 +215,7 @@ class CombinedGPAligner(pl.LightningModule):
                 "val/node.val_ap": ap_score, 
                 "val/node.val_acc": acc, 
                 "val/node.val_f1": f1, 
-                'val/one_hot_labels': batch.one_hot_labels.detach().cpu(), #one_hot_labels_flattened.detach().cpu(),
+                'val/one_hot_labels': batch.one_hot_labels.detach().cpu(),
                 'val/attention_weights': attn_weights.detach().cpu() if attn_weights != None else None,
                 'val/phen_gene_sims': phen_gene_sims.detach().cpu(),
                 'val/phenotype_names_degrees': batch.phenotype_names,
@@ -270,12 +263,6 @@ class CombinedGPAligner(pl.LightningModule):
             phen_df = pd.DataFrame({'patient_id': all_patient_ids, 'phenotypes': all_phens, 'degrees': all_degrees, 'attention':all_attn_weights})
             print(phen_df.head())
 
-        # # Save embeddings
-        # if save:
-        #     print("Node embeddings size", node_embeddings.shape)
-        #     torch.save(batch_info["n_id"].cpu(), Path(run_folder) /'node_embeddings_idx.pth')
-        #     torch.save(node_embeddings.cpu(), Path(run_folder) /'node_embeddings.pth')
-        
         return results_df, phen_df, attn_dfs, phenotype_embeddings.cpu(), None
   
     def test_step(self, batch, batch_idx):
@@ -300,7 +287,6 @@ class CombinedGPAligner(pl.LightningModule):
 
     def inference(self, batch, batch_idx):
         outputs, gat_attn = self.node_model.predict(self.all_data)
-        #outputs, gat_attn = self.node_model.forward(batch.n_id, batch.adjs)
         pad_outputs = torch.cat([torch.zeros(1, outputs.size(1), device=outputs.device), outputs])
         t1 = time.time()
 
@@ -318,9 +304,6 @@ class CombinedGPAligner(pl.LightningModule):
             print("Augmenting genes at inference...", self.hparams.hparams['aug_gene_w'])
             _, max_n_sim_cand_genes, k_sim_genes = batch.batch_sim_gene_nid.shape
             sim_gene_embeddings = torch.index_select(pad_outputs, 0, batch.batch_sim_gene_nid.view(-1)).view(batch_sz, max_n_sim_cand_genes, self.hparams.hparams['n_sim_genes'], -1)
-            #gene_similarities = batch.batch_sim_gene_sims / torch.sum(batch.batch_sim_gene_sims, dim=1, keepdim=True)
-            #agg_sim_gene_embedding = weighted_sum(sim_gene_embeddings, gene_similarities)            
-            #cand_gene_embeddings = (1 - self.hparams.hparams['aug_gene_w']) * cand_gene_embeddings + self.hparams.hparams['aug_gene_w'] * agg_sim_gene_embedding
             agg_sim_gene_embedding = weighted_sum(sim_gene_embeddings, batch.batch_sim_gene_sims)        
             aug_gene_w = (self.hparams.hparams['aug_gene_w'] * (torch.sum(batch.batch_sim_gene_sims, dim = -1) > 0)).unsqueeze(-1)
             cand_gene_embeddings = torch.mul(1 - aug_gene_w, cand_gene_embeddings) + torch.mul(aug_gene_w, agg_sim_gene_embedding)
@@ -357,8 +340,6 @@ class CombinedGPAligner(pl.LightningModule):
 
         # Rank genes
         correct_gene_ranks, phen_gene_sims = self.patient_model._rank_genes(phen_gene_sims, phen_gene_mask, phen_gene_one_hot_labels)
-        
-        # node_embedder_loss, patient_loss, correct_gene_ranks, roc_score, ap_score, acc, f1, node_embeddings, gat_attn, phenotype_embedding, candidate_gene_embeddings, attn_weights, phen_gene_sims, raw_phen_gene_sims, gene_mask, phenotype_mask = self._step(batch, 'test')
 
         results_df, phen_df, attn_dfs, phenotype_embeddings, disease_embeddings = self.write_results_to_file(batch, phen_gene_sims, gene_mask, phenotype_mask, attn_weights, correct_gene_ranks, gat_attn, node_embeddings, phenotype_embedding, save=True)
         return results_df, phen_df, *attn_dfs, phenotype_embeddings, disease_embeddings

@@ -33,8 +33,6 @@ class CombinedPatientNCA(pl.LightningModule):
         super().__init__()
         self.save_hyperparameters('hparams') 
 
-        #print('Saved combined model hyperparameters: ', self.hparams)
-
         self.all_data = all_data
 
         self.all_train_nodes = []
@@ -210,11 +208,7 @@ class CombinedPatientNCA(pl.LightningModule):
     def write_results_to_file(self, batch, softmax, correct_ranks, labels, phenotype_mask, disease_mask, attn_weights,  gat_attn, node_embeddings, phenotype_embeddings, disease_embeddings, save=True, loop_type='predict'):
         
         if save:
-            # if self.hparams.hparams['loss'] == 'patient_disease_NCA': task = 'disease_characterization'
-            # else: task = 'patient_NCA'
             run_folder = Path(project_config.PROJECT_DIR) / 'checkpoints' / 'patient_NCA' / self.hparams.hparams['run_name'] / (Path(self.test_dataloader.dataloader.dataset.filepath).stem ) #.replce('/', '_')
-
-            # run_folder = Path(project_config.PROJECT_DIR) / 'results' / task / self.hparams.hparams['run_name'] / (Path(self.test_dataloader.dataloader.dataset.filepath).stem ) #.replce('/', '_')
             run_folder.mkdir(parents=True, exist_ok=True)
             print('run_folder', run_folder)
         
@@ -327,7 +321,6 @@ class CombinedPatientNCA(pl.LightningModule):
     
     def inference(self, batch, batch_idx):
         outputs, gat_attn = self.node_model.predict(self.all_data)
-        #outputs, gat_attn = self.node_model.forward(batch.n_id, batch.adjs)
 
         pad_outputs = torch.cat([torch.zeros(1, outputs.size(1), device=outputs.device), outputs]) 
 
@@ -408,8 +401,6 @@ class CombinedPatientNCA(pl.LightningModule):
 
             phenotype_names = [' | '.join([item[0] for item in li][0:6])  for x in outputs for li in x[f'{loop_type}/phenotype_names_degrees'] ] #only take first few for now because they don't all fit
             patient_label = {
-                        #"Id": patient_ids,
-                        #"Patient Type": patient_type,
                         "Phenotypes": phenotype_names ,
                         "Node Type": correct_disease_names,
                         "Correct Gene": correct_gene_names,

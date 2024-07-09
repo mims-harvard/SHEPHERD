@@ -98,9 +98,6 @@ def main():
     parser.add_argument('--only_test_data', action='store_true', help='Only calculate SPL for the test data. You might want to do this if you have separate runs for many different test datasets and want to generate separate SPL for train/val & testing')
     parser.add_argument('--only_train_val_data', action='store_true', help='Only calculate SPL for the train/val data. You might want to do this if you have separate runs for many different test datasets and want to generate separate SPL for train/val & testing')
     
-    #parser.add_argument('--combine_corrupt', action='store_true', help='Combine original and corrupt')
-    # --> Moved this code to "../combine_patient_cohorts.py"
-    
     args = parser.parse_args()
     print('Aggregation type: ', args.agg_type)
     

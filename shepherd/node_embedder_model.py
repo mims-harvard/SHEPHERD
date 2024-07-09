@@ -60,7 +60,6 @@ class NodeEmbeder(pl.LightningModule):
         self.output = self.hparams.hp_dict['output']
 
         self.node_emb = nn.Embedding(num_nodes, self.nfeat)
-        #self.node_emb = torch.normal(torch.zeros(num_nodes, self.nfeat), std = 1).to(device)
         
         self.num_nodes = num_nodes 
         self.num_relations = len(edge_attr_dict)
@@ -74,7 +73,6 @@ class NodeEmbeder(pl.LightningModule):
         elif self.decoder_type == "dot": self.decoder = dot
         
         self.n_layers = 3
-        #self.n_layers = 2
         
         self.loss_type = self.hparams.hp_dict['loss']
         self.combined_training = combined_training
@@ -117,7 +115,6 @@ class NodeEmbeder(pl.LightningModule):
 
     def forward(self, n_ids, adjs): 
         x = self.node_emb(n_ids)
-        #x = self.node_emb[n_ids]
         
         gat_attn = []
         assert len(adjs) == self.n_layers
@@ -390,7 +387,6 @@ class NodeEmbeder(pl.LightningModule):
                 x = F.leaky_relu(x)
                 if self.norm_method == "batch_layer":
                     x = self.batch_norms[i](x)
-                #x = F.dropout(x, p=self.dropout, training=self.training)
         
         assert x.shape[0] == self.node_emb.weight.shape[0]
 

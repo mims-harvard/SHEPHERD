@@ -300,7 +300,6 @@ class PatientNeighborSampler(torch.utils.data.DataLoader):
         # Up-sample candidate genes
         self.upsample_cand = upsample_cand
         self.cand_gene_freq = Counter([])
-        #self.cand_gene_freq = Counter(list(self.patient_dataset.unique_genes)) # Upsample from the causal/candidate genes in patients
         with open(str(project_config.KG_DIR  / f'ensembl_to_idx_dict_{project_config.CURR_KG}.pkl'), 'rb') as handle:
             ensembl_to_idx_dict = pickle.load(handle) # create ensembl to node_idx map
         idx_to_ensembl_dict = {v: k for k, v in ensembl_to_idx_dict.items()}
@@ -412,11 +411,6 @@ class PatientNeighborSampler(torch.utils.data.DataLoader):
             except:
                 targets = random_walk(row, col, source_batch, walk_length=1, coalesced=False)[:, 1] #NOTE: only does self loops when no edges in the current partition of the dataset
         else:
-
-            # # Add self loop to all nodes in source batch 
-            # row = torch.cat([row, source_batch])
-            # col = torch.cat([col, source_batch])
-
             targets = random_walk(row, col, source_batch, walk_length=1, coalesced=False)[:, 1] #NOTE: only does self loops when no edges in the current partition of the dataset
         return source_batch, targets
 

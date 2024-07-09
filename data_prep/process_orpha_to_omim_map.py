@@ -47,7 +47,3 @@ orpha_to_omim_df_validated = orpha_to_omim_df.loc[orpha_to_omim_df['External_Map
 orpha_to_omim_df_validated_exact = orpha_to_omim_df_validated.loc[orpha_to_omim_df_validated['External_Mapping_Rel'] == 'E (Exact mapping: the two concepts are equivalent)']
 
 print(len(orpha_to_omim_df), len(orpha_to_omim_df_validated), len(orpha_to_omim_df_validated_exact))
-#print(orpha_to_omim_df.loc[orpha_to_omim_df['External_Mapping_Status'] == 'Not yet validated', ['OrphaNumber', 'Disorder_Name', 'External_ID', 'External_Mapping_Rel']])
-# print(orpha_to_omim_df.loc[['OrphaNumber', 'Disorder_Name', 'External_Source', 'External_ID',
-#        'External_Mapping_Rel', 'External_Mapping_Status']])
-
