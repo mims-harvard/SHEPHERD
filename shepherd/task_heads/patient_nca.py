@@ -7,6 +7,7 @@ import wandb
 from torch import nn
 import torch
 import torch.nn.functional as F
+from torch.nn import TransformerEncoderLayer
 
 import numpy as np
 from scipy.stats import rankdata
@@ -45,11 +46,19 @@ class PatientNCA(pl.LightningModule):
         self.leaky_relu = nn.LeakyReLU(hparams['leaky_relu'])
 
         self.loss = NCALoss(softmax_scale=self.hyperparameters['softmax_scale'], only_hard_distractors=self.hyperparameters['only_hard_distractors']) 
+        
+        if 'n_transformer_layers' in hparams and hparams['n_transformer_layers'] > 0:
+            encoder_layer = TransformerEncoderLayer(d_model=embed_dim, nhead=hparams['n_transformer_heads'])
+            self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=hparams['n_transformer_layers'])
 
 
     def forward(self, phenotype_embeddings, disease_embeddings, phenotype_mask=None, disease_mask=None): 
         assert phenotype_mask != None  
         if self.hyperparameters['loss'] == 'patient_disease_NCA':  assert disease_mask != None
+        
+        if 'n_transformer_layers' in self.hyperparameters and self.hyperparameters['n_transformer_layers'] > 0:
+            phenotype_embeddings = self.transformer_encoder(phenotype_embeddings.transpose(0, 1), src_key_padding_mask=~phenotype_mask).transpose(0, 1)
+
 
         # attention weighted average of phenotype embeddings
         batched_attn = self.attn_vector.repeat(phenotype_embeddings.shape[0],1)

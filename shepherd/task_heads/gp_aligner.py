@@ -6,6 +6,7 @@ import wandb
 from torch import nn
 import torch
 import torch.nn.functional as F
+from torch.nn import TransformerEncoderLayer
 
 import numpy as np
 from scipy.stats import rankdata
@@ -58,12 +59,18 @@ class GPAligner(pl.LightningModule):
                                 hparams['margin'], hparams['thresh'], 
                                 embed_dim, hparams['only_hard_distractors']) 
 
+        if 'n_transformer_layers' in hparams and hparams['n_transformer_layers'] > 0:
+            encoder_layer = TransformerEncoderLayer(d_model=embed_dim, nhead=hparams['n_transformer_heads'])
+            self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=hparams['n_transformer_layers'])
 
 
     def forward(self, phenotype_embeddings, candidate_gene_embeddings, disease_embeddings=None, phenotype_mask=None, gene_mask=None, disease_mask=None): 
         assert phenotype_mask != None
         assert gene_mask != None
         if self.hyperparameters['use_diseases']: assert disease_mask != None
+
+        if 'n_transformer_layers' in self.hyperparameters and self.hyperparameters['n_transformer_layers'] > 0:
+            phenotype_embeddings = self.transformer_encoder(phenotype_embeddings.transpose(0, 1), src_key_padding_mask=~phenotype_mask).transpose(0, 1)
 
         # attention weighted average of phenotype embeddings
         batched_attn = self.attn_vector.repeat(phenotype_embeddings.shape[0],1)
