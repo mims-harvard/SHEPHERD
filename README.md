@@ -9,10 +9,14 @@
 - [Isaac S. Kohane](http://zaklab.org)
 - [Marinka Zitnik](http://zitniklab.hms.harvard.edu)
 
+**Additional resources**:
+- [Paper](https://www.medrxiv.org/content/10.1101/2022.12.07.22283238v1)
+- [Project Website](https://zitniklab.hms.harvard.edu/projects/SHEPHERD/)
+- [HuggingFace Space illustrating SHEPHERD's use for causal gene nomination, patients-like-me identification and disease characterization](https://huggingface.co/spaces/emilyalsentzer/SHEPHERD)
 
 ## Overview of SHEPHERD
 
-There are over 7,000 unique rare diseases, some of which affecting 3,500 or fewer patients in the US. Due to clinicians' limited experience with such diseases and the considerable heterogeneity of their clinical presentations, many patients with rare genetic diseases remain undiagnosed. While artificial intelligence has demonstrated success in assisting diagnosis, its success is usually contingent on the availability of large annotated datasets. Here, we present SHEPHERD, a deep learning approach for multi-faceted rare disease diagnosis. To overcome the limitations of supervised learning, SHEPHERD performs label-efficient training by (1) training exclusively on simulated rare disease patients without the use of any real labeled data and (2) incorporating external knowledge of known phenotype, gene and disease associations via knowledge-guided deep learning.
+There are over 7,000 unique rare diseases, some of which affect 3,500 or fewer patients in the US. Due to clinicians' limited experience with such diseases and the considerable heterogeneity of their clinical presentations, many patients with rare genetic diseases remain undiagnosed. While artificial intelligence has demonstrated success in assisting diagnosis, its success is usually contingent on the availability of large annotated datasets. Here, we present SHEPHERD, a deep learning approach for multi-faceted rare disease diagnosis. To overcome the limitations of supervised learning, SHEPHERD performs label-efficient training by (1) training exclusively on simulated rare disease patients without the use of any real labeled data and (2) incorporating external knowledge of known phenotype, gene and disease associations via knowledge-guided deep learning.
 
 ### The Rare Disease Diagnosis Pipeline
 
@@ -206,10 +210,7 @@ To generate predictions on your own dataset, please use `--patient_data my_data`
 
 To see and/or modify the default hyperparameters, please see the `get_predict_hparams()` function in `shepherd/hparams.py`.
 
-## Additional Resources
-
-- [Paper](https://www.medrxiv.org/content/10.1101/2022.12.07.22283238v1)
-- [Project Website](https://zitniklab.hms.harvard.edu/projects/SHEPHERD/)
+## Manuscript
 
 ```
 @article{shepherd,
