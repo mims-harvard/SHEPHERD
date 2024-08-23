@@ -293,8 +293,8 @@ class PatientNeighborSampler(torch.utils.data.DataLoader):
 
         # For SPL
         self.nid_to_spl_dict = nid_to_spl_dict 
-        if hparams["alpha"] < 1: self.gp_spl = gp_spl
-        else: self.gp_spl = None
+        # if hparams["alpha"] < 1: self.gp_spl = gp_spl
+        # else: self.gp_spl = None
         self.spl_indexing_dict = spl_indexing_dict
 
         # Up-sample candidate genes
@@ -435,7 +435,7 @@ class PatientNeighborSampler(torch.utils.data.DataLoader):
             if patient_labels is None: data['patient_labels'] = None
             else: data['patient_labels'] = torch.stack(patient_labels)
 
-        # Get candidate genes to phenotypes SPL
+        # Get candidate genes to phenotypes SPL shortest path lengths
         if not self.gp_spl is None:
             if not self.spl_indexing_dict is None:
                 patient_ids = np.vectorize(self.spl_indexing_dict.get)(patient_ids).astype(int)
