@@ -138,7 +138,7 @@ def main():
         patients = patients + test_patients
 
     # get filenames
-    spl_matrix_fname = project_config.MY_DATA_DIR / f'{args.save_prefix}_agg={args.agg_type}_spl_matrix.npy'
+    spl_matrix_fname = project_config.MY_DATA_DIR / f'{args.save_prefix}_agg_{args.agg_type}_spl_matrix.npy'
     spl_index_fname = project_config.MY_DATA_DIR / f'{args.save_prefix}_spl_index_dict.pkl'
 
     print(f'There are {len(patients)} patients in the dataset')
