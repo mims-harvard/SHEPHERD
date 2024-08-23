@@ -295,6 +295,8 @@ class PatientNeighborSampler(torch.utils.data.DataLoader):
         self.nid_to_spl_dict = nid_to_spl_dict 
         if hparams["alpha"] < 1: self.gp_spl = gp_spl
         else: self.gp_spl = None
+        logger.info(f'Using SPLs: {self.gp_spl is not None}')
+        logger.info(f'Path to SPLs: {gp_spl}')
         self.spl_indexing_dict = spl_indexing_dict
 
         # Up-sample candidate genes
