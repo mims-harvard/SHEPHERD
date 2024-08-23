@@ -216,6 +216,8 @@ def get_predict_hparams(args):
                'log_gpu_memory': False,
                'debug': False,
 
+                'alpha': 0.001, # Contribution of GP gate. No clue what number to use here
+
                'augment_genes': True,
                'n_sim_genes': 3,
                'aug_gene_w': 0.5,
