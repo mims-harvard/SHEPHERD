@@ -256,7 +256,7 @@ class PatientNeighborSampler(torch.utils.data.DataLoader):
                  gp_spl = None,
                  spl_indexing_dict=None,
 
-                 gene_similarity_dict=None,
+                 gene_similarity_dict=None, # I can't find this file, train.py suggests it should be in the KG_DIR
                  gene_deg_dict = None,
 
                  hparams=None,
@@ -298,7 +298,7 @@ class PatientNeighborSampler(torch.utils.data.DataLoader):
         if hparams["alpha"] < 1: self.gp_spl = gp_spl
         else: self.gp_spl = None
         logger.info(f'Using SPLs: {self.gp_spl is not None}')
-        logger.info(f'Path to SPLs: {gp_spl}')
+        logger.info(f'Number of SPLs: {len(gp_spl)}')
         self.spl_indexing_dict = spl_indexing_dict
 
         # Up-sample candidate genes
@@ -313,7 +313,17 @@ class PatientNeighborSampler(torch.utils.data.DataLoader):
         self.use_diseases = use_diseases
         self.hparams = hparams
 
+        # if we had this file, we would load it here
+        # if self.hparams['augment_genes']:
+        #     with open(str(project_config.KG_DIR  (
+        #             'top_10_similar_genes_sim=%s.pkl' % args.aug_sim)), "rb") as input_file:
+        #         gene_similarity_dict = pickle.load(input_file)
+        #     print("Using augment gene similarity: %s" % args.aug_sim)
+        # else:
+        #     gene_similarity_dict = None
+
         self.gene_similarity_dict = gene_similarity_dict
+
         self.gene_deg_dict = gene_deg_dict
 
         # Obtain a *transposed* `SparseTensor` instance.

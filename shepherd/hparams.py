@@ -225,7 +225,7 @@ def get_predict_hparams(args):
 
                 'alpha': 0.001, # Contribution of GP gate. No clue what number to use here
 
-               'augment_genes': True,
+               'augment_genes': False, # Flag to augment gene embeddings with similar genes. Without top_10_similar_genes_sim....pkl, this will not work if set to True
                'n_sim_genes': 3,
                'aug_gene_w': 0.5,
 
