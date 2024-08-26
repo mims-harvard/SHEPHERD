@@ -1,10 +1,12 @@
 import project_config
+from loguru import logger
 
 ####################################################################
 #
 # NODE EMBEDDER MODEL HYPERPARAMETERS
 #
 ####################################################################
+
 
 def get_pretrain_hparams(args, combined=False):    
     print('node embedder args: ', args)
@@ -192,6 +194,11 @@ def get_patient_data_args(args, hparams):
                         'spl': project_config.MY_SPL_DATA, # Result of add_spl_to_patients.py (suffix: _spl_matrix.npy)
                         'spl_index': project_config.MY_SPL_INDEX_DATA, # Result of add_spl_to_patients.py (suffix: _spl_index_dict.pkl)
                         })
+        logger.info("train_data: ", hparams['train_data'])
+        logger.info("validation_data: ", hparams['validation_data'])
+        logger.info("test_data: ", hparams['test_data'])
+        logger.info("spl: ", hparams['spl'])
+        logger.info("spl_index: ", hparams['spl_index'])
     else:
         raise Exception('You must specify patient data.')
     return hparams
