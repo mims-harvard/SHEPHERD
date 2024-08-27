@@ -10,7 +10,7 @@
 - [Marinka Zitnik](http://zitniklab.hms.harvard.edu)
 
 **Additional resources**:
-- [Paper](https://www.medrxiv.org/content/10.1101/2022.12.07.22283238v1)
+- [Paper](https://www.medrxiv.org/content/10.1101/2022.12.07.22283238v2)
 - [Project Website](https://zitniklab.hms.harvard.edu/projects/SHEPHERD/)
 - [HuggingFace Space illustrating SHEPHERD's use for causal gene nomination, patients-like-me identification and disease characterization](https://huggingface.co/spaces/emilyalsentzer/SHEPHERD)
 
