@@ -215,12 +215,16 @@ To see and/or modify the default hyperparameters, please see the `get_predict_hp
 ```
 @article{shepherd,
   title={Few shot learning for phenotype-driven diagnosis of patients with rare genetic diseases},
-  author={Alsentzer, Emily and Li, Michelle M. and Kobren, Shilpa and Noori, Ayush and Undiagnosed Diseases Network and Kohane, Isaac S. and Zitnik, Marinka},
-  journal={medRxiv},
-  year={2024}
+  author={Alsentzer, Emily and Li, Michelle M and Kobren, Shilpa N and Noori, Ayush and Kohane, Isaac S and Zitnik, Marinka},
+  journal={npj Digital Medicine},
+  volume={8},
+  number={1},
+  pages={1--22},
+  year={2025},
+  publisher={Nature Publishing Group}
 }
 ```
 
 ## Questions
 
-Please leave a Github issue or contact Emily Alsentzer at ealsentzer@bwh.harvard.edu and Michelle Li at michelleli@g.harvard.edu.
+Please leave a Github issue or contact Emily Alsentzer at ealsentzer@stanford.edu and Michelle Li at michelleli@g.harvard.edu.
