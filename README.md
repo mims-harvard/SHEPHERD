@@ -1,5 +1,9 @@
 # Few shot learning for phenotype-driven diagnosis of patients with rare genetic diseases
 
+[![Manuscript](https://img.shields.io/badge/Manuscript-SHEPHERD-blue)](https://www.nature.com/articles/s41746-025-01749-1)
+[![ProjectPage](https://img.shields.io/badge/ProjectPage-SHEPHERD-red)](https://zitniklab.hms.harvard.edu/projects/SHEPHERD/)
+
+
 **Authors**:
 - [Emily Alsentzer](https://emilyalsentzer.com) (Equal contribution)
 - [Michelle M. Li](http://michellemli.com) (Equal contribution)
