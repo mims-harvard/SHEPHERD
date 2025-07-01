@@ -1,7 +1,8 @@
 # Few shot learning for phenotype-driven diagnosis of patients with rare genetic diseases
 
 [![Manuscript](https://img.shields.io/badge/Manuscript-SHEPHERD-blue)](https://www.nature.com/articles/s41746-025-01749-1)
-[![ProjectPage](https://img.shields.io/badge/ProjectPage-SHEPHERD-red)](https://zitniklab.hms.harvard.edu/projects/SHEPHERD/)
+[![ProjectPage](https://img.shields.io/badge/Project_Page-SHEPHERD-red)](https://zitniklab.hms.harvard.edu/projects/SHEPHERD/)
+[![HuggingfaceSpace](https://img.shields.io/badge/Hugging_Face-SHEPHERD-purple)](https://huggingface.co/spaces/emilyalsentzer/SHEPHERD)
 
 
 **Authors**:
@@ -12,11 +13,6 @@
 - [Undiagnosed Diseases Network](https://undiagnosed.hms.harvard.edu)
 - [Isaac S. Kohane](http://zaklab.org)
 - [Marinka Zitnik](http://zitniklab.hms.harvard.edu)
-
-**Additional resources**:
-- [Paper](https://www.medrxiv.org/content/10.1101/2022.12.07.22283238v2)
-- [Project Website](https://zitniklab.hms.harvard.edu/projects/SHEPHERD/)
-- [HuggingFace Space illustrating SHEPHERD's use for causal gene nomination, patients-like-me identification and disease characterization](https://huggingface.co/spaces/emilyalsentzer/SHEPHERD)
 
 ## Overview of SHEPHERD
 
